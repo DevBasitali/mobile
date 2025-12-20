@@ -867,6 +867,13 @@ export default function Register() {
 
   const handleSuccessNavigation = () => {
     setShowSuccess(false);
+    router.replace('/kyc'); // Navigate to KYC verification
+  };
+
+  const handleSkipVerification = () => {
+    setShowSuccess(false);
+    // Redirect to appropriate dashboard without verification
+    router.replace(role === 'host' ? '/(host)/(tabs)' : '/(customer)/(tabs)');
   };
   // ============================================
   // END ORIGINAL LOGIC
@@ -921,15 +928,15 @@ export default function Register() {
       <View style={styles.decorativeCircle1} />
       <View style={styles.decorativeCircle2} />
 
-      {/* SUCCESS MODAL */}
       <SuccessModal
         visible={showSuccess}
-        title="Welcome Aboard!"
-        message={`Your ${
-          role === "host" ? "Host" : "Traveler"
-        } account has been created successfully. Let's verify your identity to get started.`}
-        buttonText="Start Verification"
+        title="Welcome to SwiftRide! 🎉"
+        message={`Your ${role === "host" ? "Host" : "Customer"
+          } account is ready! \n\nTo unlock all features like ${role === 'host' ? 'listing cars' : 'booking rides'}, we recommend verifying your identity.`}
+        buttonText="Verify Now"
         onNext={handleSuccessNavigation}
+        showSkip={true}
+        onSkip={handleSkipVerification}
       />
 
       <KeyboardAvoidingView

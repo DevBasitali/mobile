@@ -20,6 +20,7 @@ import kycService from '../../services/kycService';
 import { Stack, router } from 'expo-router';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import SuccessModal from '../../components/common/SuccessModal';
 
 const { width } = Dimensions.get('window');
 
@@ -58,6 +59,8 @@ export default function KycScreen() {
   // ============================================
   const { kycStatus, refreshKycStatus, user, redirectByRole } = useAuth();
   const [uploading, setUploading] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [allowReupload, setAllowReupload] = useState(false); // For pending state re-upload
 
   const [images, setImages] = useState({
     id_front: null,
@@ -69,7 +72,7 @@ export default function KycScreen() {
   const pickFromGallery = async (field) => {
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: ['images'], // Updated from deprecated MediaTypeOptions.Images
         allowsEditing: true,
         aspect: [4, 3],
         quality: 0.7,
@@ -141,15 +144,9 @@ export default function KycScreen() {
 
       await kycService.submitUserKyc(formData);
 
-      Alert.alert('Success', 'KYC Submitted! We will notify you once approved.', [
-        {
-          text: 'OK',
-          onPress: async () => {
-            await refreshKycStatus();
-            redirectByRole(user?.role);
-          },
-        },
-      ]);
+      // Show success modal instead of alert
+      await refreshKycStatus();
+      setShowSuccess(true);
     } catch (error) {
       console.log('KYC Upload Error:', error);
       Alert.alert('Upload Failed', 'Something went wrong. Please try again.');
@@ -191,12 +188,12 @@ export default function KycScreen() {
   // ============================================
   // 📊 PENDING STATE
   // ============================================
-  if (kycStatus === 'pending') {
+  if (kycStatus === 'pending' && !allowReupload) {
     return (
       <View style={styles.container}>
         <StatusBar barStyle="light-content" backgroundColor={COLORS.navy[900]} />
         <Stack.Screen options={{ headerShown: false }} />
-        
+
         <LinearGradient
           colors={[COLORS.navy[900], COLORS.navy[800]]}
           style={styles.gradient}
@@ -235,6 +232,16 @@ export default function KycScreen() {
               <Ionicons name="arrow-forward" size={20} color={COLORS.navy[900]} />
             </LinearGradient>
           </TouchableOpacity>
+
+          {/* Secondary Button - Update Documents */}
+          <TouchableOpacity
+            style={styles.secondaryButton}
+            onPress={() => setAllowReupload(true)}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="cloud-upload-outline" size={20} color={COLORS.gold[500]} />
+            <Text style={styles.secondaryButtonText}>Update Documents</Text>
+          </TouchableOpacity>
         </Animated.View>
       </View>
     );
@@ -248,7 +255,7 @@ export default function KycScreen() {
       <View style={styles.container}>
         <StatusBar barStyle="light-content" backgroundColor={COLORS.navy[900]} />
         <Stack.Screen options={{ headerShown: false }} />
-        
+
         <LinearGradient
           colors={[COLORS.navy[900], COLORS.navy[800]]}
           style={styles.gradient}
@@ -298,13 +305,34 @@ export default function KycScreen() {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={COLORS.navy[900]} />
+
+      {/* Success Modal */}
+      <SuccessModal
+        visible={showSuccess}
+        title="Documents Submitted! 🎉"
+        message="Your verification will be completed within 24-48 hours. You'll receive a notification once approved.\n\nYou can continue using the app in the meantime."
+        buttonText="Go to Dashboard"
+        onNext={() => {
+          setShowSuccess(false);
+          redirectByRole(user?.role);
+        }}
+      />
+
       <Stack.Screen
         options={{
           headerShown: true,
-          title: 'Identity Verification',
+          title: kycStatus === 'pending' && allowReupload ? 'Update Documents' : 'Identity Verification',
           headerStyle: { backgroundColor: COLORS.navy[900] },
           headerTintColor: COLORS.white,
           headerTitleStyle: { fontWeight: '600' },
+          headerLeft: kycStatus === 'pending' && allowReupload ? () => (
+            <TouchableOpacity
+              onPress={() => setAllowReupload(false)}
+              style={{ paddingLeft: 8, flexDirection: 'row', alignItems: 'center' }}
+            >
+              <Ionicons name="arrow-back" size={24} color={COLORS.white} />
+            </TouchableOpacity>
+          ) : undefined,
           headerRight: () => (
             <TouchableOpacity onPress={handleSkip} style={{ paddingRight: 8 }}>
               <Text style={{ color: COLORS.gold[500], fontSize: 15, fontWeight: '600' }}>
@@ -711,6 +739,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 10,
     elevation: 6,
+    maxWidth: 400,
+    width: '100%',
+    alignSelf: 'center',
   },
   buttonDisabled: {
     opacity: 0.7,
@@ -737,6 +768,27 @@ const styles = StyleSheet.create({
     color: COLORS.gray[400],
     fontWeight: '500',
   },
+  secondaryButton: {
+    marginTop: 16,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    backgroundColor: 'transparent',
+    borderRadius: 14,
+    borderWidth: 2,
+    borderColor: COLORS.gold[500],
+    maxWidth: 400,
+    width: '100%',
+    alignSelf: 'center',
+  },
+  secondaryButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: COLORS.gold[500],
+  },
 
   // Footer Info
   footerInfo: {
@@ -757,7 +809,8 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 24,
+    paddingVertical: 24,
+    paddingHorizontal: 32,
   },
   statusIconContainer: {
     marginBottom: 24,

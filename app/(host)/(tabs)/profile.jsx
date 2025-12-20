@@ -12,8 +12,9 @@ import {
 import { useAuth } from '../../../context/AuthContext';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useCallback } from 'react';
 
 // ============================================
 // 🎨 INLINE THEME COLORS
@@ -55,7 +56,14 @@ export default function HostProfile() {
   // ============================================
   // 🔒 ORIGINAL LOGIC - COMPLETELY UNTOUCHED
   // ============================================
-  const { user, logout, kycStatus } = useAuth();
+  const { user, logout, kycStatus, refreshKycStatus } = useAuth();
+
+  // Auto-refresh KYC status when profile screen is focused
+  useFocusEffect(
+    useCallback(() => {
+      refreshKycStatus();
+    }, [])
+  );
 
   const handleLogout = () => {
     Alert.alert("Log Out", "Are you sure?", [
@@ -144,19 +152,19 @@ export default function HostProfile() {
             icon="wallet-outline"
             label="Payout Settings"
             gradient={[COLORS.blue[500], '#2563EB']}
-            onPress={() => {}}
+            onPress={() => { }}
           />
           <MenuItem
             icon="bar-chart-outline"
             label="Performance Analytics"
             gradient={[COLORS.emerald[500], '#059669']}
-            onPress={() => {}}
+            onPress={() => { }}
           />
           <MenuItem
             icon="receipt-outline"
             label="Earnings Report"
             gradient={[COLORS.purple[500], '#7C3AED']}
-            onPress={() => {}}
+            onPress={() => { }}
           />
 
           {/* Security */}
@@ -173,13 +181,13 @@ export default function HostProfile() {
             icon="lock-closed-outline"
             label="Change Password"
             gradient={[COLORS.orange[500], '#EA580C']}
-            onPress={() => {}}
+            onPress={() => { }}
           />
           <MenuItem
             icon="finger-print-outline"
             label="Privacy Settings"
             gradient={[COLORS.blue[500], '#2563EB']}
-            onPress={() => {}}
+            onPress={() => { }}
           />
 
           {/* Support */}
@@ -188,19 +196,19 @@ export default function HostProfile() {
             icon="chatbubbles-outline"
             label="Help Center"
             gradient={[COLORS.emerald[500], '#059669']}
-            onPress={() => {}}
+            onPress={() => { }}
           />
           <MenuItem
             icon="document-text-outline"
             label="Terms & Conditions"
             gradient={[COLORS.gray[500], '#4B5563']}
-            onPress={() => {}}
+            onPress={() => { }}
           />
           <MenuItem
             icon="information-circle-outline"
             label="About App"
             gradient={[COLORS.blue[500], '#2563EB']}
-            onPress={() => {}}
+            onPress={() => { }}
           />
         </View>
 

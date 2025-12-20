@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, FlatList, Dimensions, TouchableOpacity } from '
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
+import * as SecureStore from 'expo-secure-store';
 
 const { width } = Dimensions.get('window');
 
@@ -42,15 +43,21 @@ export default function OnboardingScreen() {
   const flatListRef = useRef(null);
 
   const viewableItemsChanged = useRef(({ viewableItems }) => {
-    if(viewableItems && viewableItems.length > 0) {
+    if (viewableItems && viewableItems.length > 0) {
       setCurrentIndex(viewableItems[0].index);
     }
   }).current;
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (currentIndex < SLIDES.length - 1) {
       flatListRef.current.scrollToIndex({ index: currentIndex + 1 });
     } else {
+      // Mark onboarding as completed
+      try {
+        await SecureStore.setItemAsync('hasSeenOnboarding', 'true');
+      } catch (error) {
+        console.log('Error saving onboarding status:', error);
+      }
       router.replace('/welcome');
     }
   };
@@ -81,12 +88,12 @@ export default function OnboardingScreen() {
         {/* Dots */}
         <View style={styles.paginator}>
           {SLIDES.map((_, i) => (
-            <View 
-              key={i} 
+            <View
+              key={i}
               style={[
-                styles.dot, 
+                styles.dot,
                 { backgroundColor: i === currentIndex ? COLORS.gold : COLORS.gray, width: i === currentIndex ? 20 : 10 }
-              ]} 
+              ]}
             />
           ))}
         </View>

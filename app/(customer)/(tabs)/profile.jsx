@@ -4,8 +4,9 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, StatusBar 
 import { useAuth } from '../../../context/AuthContext';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useCallback } from 'react';
 
 const COLORS = {
   navy: { 900: '#0A1628', 800: '#0F2137', 700: '#152A46' },
@@ -16,7 +17,14 @@ const COLORS = {
 };
 
 export default function CustomerProfile() {
-  const { user, logout, kycStatus } = useAuth();
+  const { user, logout, kycStatus, refreshKycStatus } = useAuth();
+
+  // Auto-refresh KYC status when profile screen is focused
+  useFocusEffect(
+    useCallback(() => {
+      refreshKycStatus();
+    }, [])
+  );
 
   const handleLogout = () => {
     Alert.alert("Log Out", "Are you sure?", [
@@ -28,8 +36,8 @@ export default function CustomerProfile() {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={COLORS.navy[900]} />
-      
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{paddingBottom: 100}}>
+
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
         {/* Header */}
         <LinearGradient colors={[COLORS.navy[900], COLORS.navy[800]]} style={styles.header}>
           <SafeAreaView edges={['top']} style={styles.headerContent}>
@@ -52,25 +60,25 @@ export default function CustomerProfile() {
         {/* Menu */}
         <View style={styles.menuContainer}>
           <Text style={styles.sectionTitle}>Account</Text>
-          <MenuItem icon="person-outline" label="Personal Info" onPress={() => {}} />
-          <MenuItem 
-            icon="shield-checkmark-outline" 
-            label="KYC Verification" 
-            status={kycStatus} 
-            onPress={() => router.push('/kyc')} 
+          <MenuItem icon="person-outline" label="Personal Info" onPress={() => { }} />
+          <MenuItem
+            icon="shield-checkmark-outline"
+            label="KYC Verification"
+            status={kycStatus}
+            onPress={() => router.push('/kyc')}
           />
-          <MenuItem icon="card-outline" label="Payment Methods" onPress={() => {}} />
+          <MenuItem icon="card-outline" label="Payment Methods" onPress={() => { }} />
 
           <Text style={styles.sectionTitle}>Support</Text>
-          <MenuItem icon="help-circle-outline" label="Help Center" onPress={() => {}} />
-          <MenuItem icon="document-text-outline" label="Terms of Service" onPress={() => {}} />
+          <MenuItem icon="help-circle-outline" label="Help Center" onPress={() => { }} />
+          <MenuItem icon="document-text-outline" label="Terms of Service" onPress={() => { }} />
         </View>
 
         <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
           <Ionicons name="log-out-outline" size={20} color={COLORS.red[500]} />
           <Text style={styles.logoutText}>Log Out</Text>
         </TouchableOpacity>
-        
+
         <Text style={styles.version}>v1.0.0</Text>
       </ScrollView>
     </View>
@@ -88,7 +96,7 @@ function MenuItem({ icon, label, status, onPress }) {
       </View>
       <View style={styles.menuRight}>
         {status && (
-          <Text style={[styles.statusText, status==='approved' ? {color:'#10B981'} : {color:'#F59E0B'}]}>
+          <Text style={[styles.statusText, status === 'approved' ? { color: '#10B981' } : { color: '#F59E0B' }]}>
             {status}
           </Text>
         )}
