@@ -5,12 +5,13 @@ import {
   StyleSheet,
   ActivityIndicator,
   View,
+  Alert,
 } from "react-native";
 import {
   GoogleSignin,
   statusCodes,
 } from "@react-native-google-signin/google-signin";
-import { Ionicons } from "@expo/vector-icons"; // Added for the icon
+import { Ionicons } from "@expo/vector-icons";
 import { googleLoginRequest } from "../../services/authService";
 import { useAuth } from "../../context/AuthContext";
 
@@ -22,7 +23,6 @@ GoogleSignin.configure({
 });
 
 const GoogleLoginBtn = ({ role = "customer" }) => {
-  // ✅ 1. Import the helper we created in AuthContext
   const { handleGoogleLogin } = useAuth();
   const [loading, setLoading] = useState(false);
 
@@ -47,16 +47,24 @@ const GoogleLoginBtn = ({ role = "customer" }) => {
 
         // 1. Send token to backend
         const response = await googleLoginRequest(idToken, role);
+        console.log("Backend Response:", JSON.stringify(response, null, 2));
 
-        console.log("Backend Response:", response);
+        // ✅ 2. ROBUST EXTRACTION (The Fix)
+        // Check both 'response.data.token' (your current backend) AND 'response.token'
+        const data = response.data || response;
+        const token = data.token || data.accessToken || response.token;
+        const user = data.user || response.user;
 
-        // 2. ✅ HAND OFF TO CONTEXT (Crucial Step)
-        // This ensures Headers are set and Token is saved BEFORE navigation
-        if (response.token && response.user) {
-          await handleGoogleLogin(response.token, response.user);
-          // No need to navigate here; AuthContext handles it!
+        console.log("🔹 EXTRACTED:", {
+          token: token ? "Found" : "Missing",
+          user: user ? "Found" : "Missing",
+        });
+
+        // 3. Hand off to context
+        if (token && user) {
+          await handleGoogleLogin(token, user);
         } else {
-          alert("Login failed: No token received");
+          Alert.alert("Login Error", "Server returned an invalid response structure.");
         }
       }
     } catch (error) {
@@ -64,7 +72,7 @@ const GoogleLoginBtn = ({ role = "customer" }) => {
       if (error.code === statusCodes.SIGN_IN_CANCELLED) {
         console.log("User cancelled login");
       } else {
-        alert("Google Login Error");
+        Alert.alert("Google Login Error", error.message || "Unknown error");
       }
     } finally {
       setLoading(false);
