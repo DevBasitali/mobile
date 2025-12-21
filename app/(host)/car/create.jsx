@@ -109,7 +109,7 @@ export default function CreateCar() {
         lng: parseFloat(params.lng),
       }));
     }
-    
+
     // Restore images if coming back from location picker
     if (params.imageUris) {
       try {
@@ -135,7 +135,20 @@ export default function CreateCar() {
       });
 
       if (!result.canceled) {
-        setImages([...images, ...result.assets]);
+        const MAX_SIZE = 5 * 1024 * 1024; // 5MB limit
+        const validImages = result.assets.filter((asset) => {
+          const size = asset.fileSize || 0;
+          return size <= MAX_SIZE;
+        });
+
+        if (validImages.length < result.assets.length) {
+          Alert.alert(
+            'File Too Large',
+            'Some images were skipped because they exceed the 5MB limit.'
+          );
+        }
+
+        setImages([...images, ...validImages]);
       }
     } catch (error) {
       Alert.alert('Error', 'Could not open gallery.');
@@ -589,7 +602,7 @@ export default function CreateCar() {
                     const newDays = currentDays.includes(day.value)
                       ? currentDays.filter((d) => d !== day.value)
                       : [...currentDays, day.value];
-                    
+
                     handleInputChange('availability', {
                       ...form.availability,
                       daysOfWeek: newDays,

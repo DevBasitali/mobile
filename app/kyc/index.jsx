@@ -76,11 +76,24 @@ export default function KycScreen() {
         mediaTypes: ['images'], // Updated from deprecated MediaTypeOptions.Images
         allowsEditing: true,
         aspect: [4, 3],
+        aspect: [4, 3],
         quality: 0.7,
       });
 
       if (!result.canceled) {
-        setImages((prev) => ({ ...prev, [field]: result.assets[0] }));
+        const asset = result.assets[0];
+
+        // Validation: 5MB Limit to match backend/Cloudinary
+        const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+        if (asset.fileSize && asset.fileSize > MAX_SIZE) {
+          Alert.alert(
+            'File Too Large',
+            'Please choose an image smaller than 5MB.'
+          );
+          return;
+        }
+
+        setImages((prev) => ({ ...prev, [field]: asset }));
       }
     } catch (error) {
       console.log('Gallery Error:', error);
@@ -103,12 +116,22 @@ export default function KycScreen() {
       const result = await ImagePicker.launchCameraAsync({
         allowsEditing: true,
         aspect: [1, 1],
+        aspect: [1, 1],
         quality: 0.6,
         cameraType: ImagePicker.CameraType.front,
       });
 
       if (!result.canceled) {
-        setImages((prev) => ({ ...prev, [field]: result.assets[0] }));
+        const asset = result.assets[0];
+
+        // Validation: 5MB Limit
+        const MAX_SIZE = 5 * 1024 * 1024;
+        if (asset.fileSize && asset.fileSize > MAX_SIZE) {
+          Alert.alert('File Too Large', 'Please take another photo.');
+          return;
+        }
+
+        setImages((prev) => ({ ...prev, [field]: asset }));
       }
     } catch (error) {
       console.log('Camera Error:', error);

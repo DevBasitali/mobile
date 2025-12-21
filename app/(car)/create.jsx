@@ -8,7 +8,7 @@ import carService from '../../services/carService'; // Needs 3 levels up
 export default function CreateCar() {
   const [loading, setLoading] = useState(false);
   const [images, setImages] = useState([]);
-  
+
   const [form, setForm] = useState({
     make: '', model: '', year: '', color: '', plateNumber: '',
     pricePerDay: '', pricePerHour: '',
@@ -23,14 +23,28 @@ export default function CreateCar() {
   const pickImages = async () => {
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images, 
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsMultipleSelection: true,
         selectionLimit: 5,
         quality: 0.7,
       });
 
       if (!result.canceled) {
-        setImages([...images, ...result.assets]);
+        // Validation: 5MB Limit
+        const MAX_SIZE = 5 * 1024 * 1024;
+        const validImages = result.assets.filter((asset) => {
+          const size = asset.fileSize || 0;
+          return size <= MAX_SIZE;
+        });
+
+        if (validImages.length < result.assets.length) {
+          Alert.alert(
+            'File Too Large',
+            'Some images were skipped because they exceed the 5MB limit.'
+          );
+        }
+
+        setImages([...images, ...validImages]);
       }
     } catch (error) {
       console.log('Image Picker Error:', error);
@@ -47,8 +61,8 @@ export default function CreateCar() {
     }
 
     if (isNaN(Number(form.seats)) || isNaN(Number(form.pricePerDay))) {
-        Alert.alert('Invalid Input', 'Seats, Price, and Year must be valid numbers.');
-        return;
+      Alert.alert('Invalid Input', 'Seats, Price, and Year must be valid numbers.');
+      return;
     }
 
     setLoading(true);
@@ -63,7 +77,7 @@ export default function CreateCar() {
       formData.append('plateNumber', form.plateNumber.trim());
       formData.append('pricePerDay', form.pricePerDay.trim());
       formData.append('pricePerHour', form.pricePerHour.trim());
-      formData.append('seats', form.seats.toString().trim()); 
+      formData.append('seats', form.seats.toString().trim());
       formData.append('transmission', form.transmission);
       formData.append('fuelType', form.fuelType);
       formData.append('description', form.description.trim());
@@ -83,11 +97,11 @@ export default function CreateCar() {
 
       console.log('Submitting Car...');
       await carService.createCar(formData);
-      
+
       Alert.alert('Success', 'Car Listed Successfully!', [
         { text: 'OK', onPress: () => router.back() }
       ]);
-      
+
     } catch (error) {
       console.log('Create Car Error:', error);
       const msg = error.message || 'Failed to create listing.';
@@ -100,7 +114,7 @@ export default function CreateCar() {
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
       <Stack.Screen options={{ title: 'List Your Car', headerBackTitle: 'Cancel' }} />
-      
+
       <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 50 }}>
         <Text style={styles.sectionTitle}>Car Photos</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.photoRow}>
@@ -120,22 +134,22 @@ export default function CreateCar() {
           <Input flex label="Model" placeholder="Camry" value={form.model} onChangeText={t => handleInputChange('model', t)} />
         </View>
         <View style={styles.row}>
-            <Input flex label="Year" placeholder="2022" keyboardType="numeric" value={form.year} onChangeText={t => handleInputChange('year', t)} />
-            <View style={{ width: 15 }} />
-            <Input flex label="Color" placeholder="Silver" value={form.color} onChangeText={t => handleInputChange('color', t)} />
+          <Input flex label="Year" placeholder="2022" keyboardType="numeric" value={form.year} onChangeText={t => handleInputChange('year', t)} />
+          <View style={{ width: 15 }} />
+          <Input flex label="Color" placeholder="Silver" value={form.color} onChangeText={t => handleInputChange('color', t)} />
         </View>
         <Input label="Plate Number" placeholder="ABC-123" value={form.plateNumber} onChangeText={t => handleInputChange('plateNumber', t)} />
 
         <Text style={styles.sectionTitle}>Specifications</Text>
         <View style={styles.row}>
-           <SelectButton label="Auto" selected={form.transmission === 'Automatic'} onPress={() => handleInputChange('transmission', 'Automatic')} />
-           <SelectButton label="Manual" selected={form.transmission === 'Manual'} onPress={() => handleInputChange('transmission', 'Manual')} />
+          <SelectButton label="Auto" selected={form.transmission === 'Automatic'} onPress={() => handleInputChange('transmission', 'Automatic')} />
+          <SelectButton label="Manual" selected={form.transmission === 'Manual'} onPress={() => handleInputChange('transmission', 'Manual')} />
         </View>
         <View style={{ height: 10 }} />
         <View style={styles.row}>
-           <Input flex label="Seats" placeholder="4" keyboardType="numeric" value={form.seats} onChangeText={t => handleInputChange('seats', t)} />
-           <View style={{ width: 15 }} />
-           <Input flex label="Fuel" placeholder="Petrol" value={form.fuelType} onChangeText={t => handleInputChange('fuelType', t)} />
+          <Input flex label="Seats" placeholder="4" keyboardType="numeric" value={form.seats} onChangeText={t => handleInputChange('seats', t)} />
+          <View style={{ width: 15 }} />
+          <Input flex label="Fuel" placeholder="Petrol" value={form.fuelType} onChangeText={t => handleInputChange('fuelType', t)} />
         </View>
 
         <Text style={styles.sectionTitle}>Price & Location</Text>
@@ -145,14 +159,14 @@ export default function CreateCar() {
           <Input flex label="Price / Hour ($)" placeholder="5" keyboardType="numeric" value={form.pricePerHour} onChangeText={t => handleInputChange('pricePerHour', t)} />
         </View>
         <Input label="Pickup Address" placeholder="123 Main St, New York" value={form.address} onChangeText={t => handleInputChange('address', t)} />
-        
+
         <Text style={styles.label}>Description</Text>
-        <TextInput 
-            style={[styles.input, { height: 100, textAlignVertical: 'top' }]} 
-            multiline 
-            placeholder="Tell us more about your car..." 
-            value={form.description}
-            onChangeText={t => handleInputChange('description', t)}
+        <TextInput
+          style={[styles.input, { height: 100, textAlignVertical: 'top' }]}
+          multiline
+          placeholder="Tell us more about your car..."
+          value={form.description}
+          onChangeText={t => handleInputChange('description', t)}
         />
 
         <TouchableOpacity style={styles.submitBtn} onPress={handleSubmit} disabled={loading}>
@@ -173,11 +187,11 @@ function Input({ label, placeholder, value, onChangeText, keyboardType, flex }) 
 }
 
 function SelectButton({ label, selected, onPress }) {
-    return (
-        <TouchableOpacity style={[styles.selectBtn, selected && styles.selectBtnActive]} onPress={onPress}>
-            <Text style={[styles.selectText, selected && styles.selectTextActive]}>{label}</Text>
-        </TouchableOpacity>
-    );
+  return (
+    <TouchableOpacity style={[styles.selectBtn, selected && styles.selectBtnActive]} onPress={onPress}>
+      <Text style={[styles.selectText, selected && styles.selectTextActive]}>{label}</Text>
+    </TouchableOpacity>
+  );
 }
 
 const styles = StyleSheet.create({

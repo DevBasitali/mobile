@@ -40,6 +40,21 @@ const authService = {
     return response.data;
   },
 
+  // Forgot Password - Send reset email
+  forgotPassword: async (email) => {
+    const response = await api.post("/auth/forgot-password", { email });
+    return response.data;
+  },
+
+  // Reset Password with token
+  resetPassword: async (token, password) => {
+    const response = await api.post("/auth/reset-password", {
+      token,
+      password,
+    });
+    return response.data;
+  },
+
   googleLoginRequest: googleLoginRequest,
 };
 

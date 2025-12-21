@@ -521,7 +521,7 @@ import {
   Animated,
   Dimensions,
 } from "react-native";
-import { Link, Stack } from "expo-router";
+import { Link, Stack, router } from "expo-router";
 import { useAuth } from "../../context/AuthContext";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
@@ -738,7 +738,10 @@ export default function Login() {
             </View>
 
             {/* Forgot Password Link */}
-            <TouchableOpacity style={styles.forgotPassword}>
+            <TouchableOpacity
+              style={styles.forgotPassword}
+              onPress={() => router.push("/(auth)/forgot-password")}
+            >
               <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
             </TouchableOpacity>
 
