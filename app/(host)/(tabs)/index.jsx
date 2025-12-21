@@ -180,10 +180,6 @@ export default function HostDashboard() {
                   </Text>
                 </View>
               </View>
-              <View style={styles.profitBadge}>
-                <Ionicons name="trending-up" size={14} color={COLORS.emerald[500]} />
-                <Text style={styles.profitText}>0%</Text>
-              </View>
             </LinearGradient>
           </View>
         </SafeAreaView>
@@ -216,13 +212,15 @@ export default function HostDashboard() {
               icon="car-sport"
               label="Total Cars"
               value={stats.totalCars.toString()}
-              gradient={[COLORS.blue[500], '#2563EB']}
+              gradient={['#1E3A5F', '#2A4A73']}
+              iconColor="#3B82F6"
             />
             <StatBox
               icon="checkmark-circle"
               label="Active Listings"
               value={stats.activeCars.toString()}
-              gradient={[COLORS.emerald[500], COLORS.emerald[400]]}
+              gradient={['#1E3A5F', '#2A4A73']}
+              iconColor="#10B981"
             />
             <TouchableOpacity
               style={{ width: (width - 55) / 2 }}
@@ -233,7 +231,8 @@ export default function HostDashboard() {
                 icon="calendar"
                 label="Bookings"
                 value={stats.totalBookings.toString()}
-                gradient={[COLORS.orange[500], '#FB923C']}
+                gradient={['#1E3A5F', '#2A4A73']}
+                iconColor="#F97316"
                 isClickable={true}
               />
             </TouchableOpacity>
@@ -241,7 +240,8 @@ export default function HostDashboard() {
               icon="star"
               label="Rating"
               value={stats.rating.toFixed(1)}
-              gradient={[COLORS.gold[500], COLORS.gold[400]]}
+              gradient={['#1E3A5F', '#2A4A73']}
+              iconColor="#F59E0B"
             />
           </View>
         )}
@@ -283,7 +283,7 @@ export default function HostDashboard() {
               sub="Your fleet is live and visible to customers"
               time="Now"
               icon="shield-checkmark"
-              gradient={[COLORS.emerald[500], COLORS.emerald[400]]}
+              gradient={['#1E3A5F', '#2A4A73']}
             />
             {stats.pendingRequests > 0 && (
               <ActivityItem
@@ -291,7 +291,7 @@ export default function HostDashboard() {
                 sub={`You have ${stats.pendingRequests} pending booking(s)`}
                 time="Action Required"
                 icon="alert-circle"
-                gradient={[COLORS.orange[500], '#FB923C']}
+                gradient={['#F59E0B', '#D99413']}
               />
             )}
           </View>
@@ -304,7 +304,7 @@ export default function HostDashboard() {
 // ============================================
 // 📦 HELPER COMPONENTS
 // ============================================
-function StatBox({ icon, label, value, gradient, isClickable }) {
+function StatBox({ icon, label, value, gradient, iconColor, isClickable }) {
   const containerStyle = isClickable ? styles.statBoxInner : styles.statBox;
 
   return (
@@ -316,7 +316,7 @@ function StatBox({ icon, label, value, gradient, isClickable }) {
         end={{ x: 1, y: 1 }}
       >
         <View style={styles.statIconContainer}>
-          <Ionicons name={icon} size={28} color={COLORS.white} />
+          <Ionicons name={icon} size={28} color={iconColor || COLORS.white} />
         </View>
         <Text style={styles.statValue}>{value}</Text>
         <Text style={styles.statLabel}>{label}</Text>
@@ -394,7 +394,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -4,
     right: -4,
-    backgroundColor: COLORS.orange[500],
+    backgroundColor: COLORS.gold[500],
     minWidth: 20,
     height: 20,
     borderRadius: 10,

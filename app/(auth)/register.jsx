@@ -794,7 +794,7 @@ import {
   StatusBar,
   Animated,
 } from "react-native";
-import { Link, Stack, router } from "expo-router";
+import { Link, Stack, router, useLocalSearchParams } from "expo-router";
 import { useAuth } from "../../context/AuthContext";
 import { Ionicons, FontAwesome5 } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -838,7 +838,11 @@ export default function Register() {
   // ============================================
   // 🔒 ORIGINAL LOGIC - COMPLETELY UNTOUCHED
   // ============================================
-  const [role, setRole] = useState("customer");
+  const { role: urlRole } = useLocalSearchParams(); // Get role from URL
+  // Map 'renter' to 'customer', default to 'customer' if not specified
+  const initialRole = urlRole === 'host' ? 'host' : 'customer';
+
+  const [role, setRole] = useState(initialRole);
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -867,7 +871,7 @@ export default function Register() {
 
   const handleSuccessNavigation = () => {
     setShowSuccess(false);
-    router.replace('/kyc'); // Navigate to KYC verification
+    router.replace(`/kyc?role=${role}`); // Navigate to KYC verification with role
   };
 
   const handleSkipVerification = () => {

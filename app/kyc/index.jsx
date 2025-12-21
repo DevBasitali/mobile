@@ -17,7 +17,7 @@ import {
 import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from '../../context/AuthContext';
 import kycService from '../../services/kycService';
-import { Stack, router } from 'expo-router';
+import { Stack, router, useLocalSearchParams } from 'expo-router';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import SuccessModal from '../../components/common/SuccessModal';
@@ -58,6 +58,7 @@ export default function KycScreen() {
   // 🔒 ORIGINAL LOGIC - COMPLETELY UNTOUCHED
   // ============================================
   const { kycStatus, refreshKycStatus, user, redirectByRole } = useAuth();
+  const { role: urlRole } = useLocalSearchParams(); // Get role from URL query params
   const [uploading, setUploading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [allowReupload, setAllowReupload] = useState(false); // For pending state re-upload
@@ -156,7 +157,10 @@ export default function KycScreen() {
   };
 
   const handleSkip = () => {
-    redirectByRole(user?.role);
+    // Use role from URL params as fallback if user.role is undefined
+    const roleToUse = user?.role || urlRole;
+    console.log("KYC handleSkip - user?.role:", user?.role, "urlRole:", urlRole, "using:", roleToUse);
+    redirectByRole(roleToUse);
   };
   // ============================================
   // END ORIGINAL LOGIC
@@ -314,7 +318,7 @@ export default function KycScreen() {
         buttonText="Go to Dashboard"
         onNext={() => {
           setShowSuccess(false);
-          redirectByRole(user?.role);
+          redirectByRole(user?.role || urlRole);
         }}
       />
 

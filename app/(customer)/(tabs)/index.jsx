@@ -1,5 +1,5 @@
 // app/(customer)/(tabs)/index.jsx
-import React, { useState, useCallback, useRef, useEffect } from "react";
+import React, { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import {
   View,
   Text,
@@ -233,24 +233,33 @@ export default function CustomerHome() {
   // 🗺️ MAP HANDLERS
   // ============================================
   const handleMarkerPress = (car) => {
-    setSelectedCar(car);
-    Animated.spring(cardAnimation, {
-      toValue: 1,
-      useNativeDriver: true,
-      friction: 8,
-    }).start();
+    try {
+      if (!car || !car._id) {
+        console.warn('Invalid car data:', car);
+        return;
+      }
 
-    // Center map on selected car
-    if (mapRef.current && car.location) {
-      mapRef.current.animateToRegion(
-        {
-          latitude: car.location.lat,
-          longitude: car.location.lng,
-          latitudeDelta: 0.01,
-          longitudeDelta: 0.01,
-        },
-        500
-      );
+      setSelectedCar(car);
+      Animated.spring(cardAnimation, {
+        toValue: 1,
+        useNativeDriver: true,
+        friction: 8,
+      }).start();
+
+      // Center map on selected car
+      if (mapRef.current && car.location && car.location.lat && car.location.lng) {
+        mapRef.current.animateToRegion(
+          {
+            latitude: car.location.lat,
+            longitude: car.location.lng,
+            latitudeDelta: 0.01,
+            longitudeDelta: 0.01,
+          },
+          500
+        );
+      }
+    } catch (error) {
+      console.error('Error handling marker press:', error);
     }
   };
 
@@ -307,7 +316,11 @@ export default function CustomerHome() {
   const renderCarItem = ({ item }) => (
     <TouchableOpacity
       activeOpacity={0.9}
-      onPress={() => router.push(`/(customer)/car/${item._id}`)}
+      onPress={() => {
+        if (item?._id) {
+          router.push(`/(customer)/car/${item._id}`);
+        }
+      }}
       style={styles.card}
     >
       <View style={styles.imageWrapper}>
@@ -375,31 +388,32 @@ export default function CustomerHome() {
     </TouchableOpacity>
   );
 
-  const renderMapMarker = (car) => {
-    if (!car.location || !car.location.lat || !car.location.lng) return null;
+  // ============================================
+  // 🗺️ MAP MARKERS (SIMPLIFIED TO PREVENT CRASHES)
+  // ============================================
+  const mapMarkers = useMemo(() => {
+    return cars.map((car) => {
+      if (!car.location || !car.location.lat || !car.location.lng || !car._id) return null;
 
-    const isSelected = selectedCar?._id === car._id;
-
-    return (
-      <Marker
-        key={car._id}
-        coordinate={{
-          latitude: car.location.lat,
-          longitude: car.location.lng,
-        }}
-        onPress={() => handleMarkerPress(car)}
-      >
-        <View style={[styles.markerContainer, isSelected && styles.markerSelected]}>
-          <LinearGradient
-            colors={isSelected ? [COLORS.gold[400], COLORS.gold[500]] : [COLORS.gold[500], COLORS.gold[600]]}
-            style={styles.markerGradient}
-          >
-            <Ionicons name="car" size={20} color={COLORS.navy[900]} />
-          </LinearGradient>
-        </View>
-      </Marker>
-    );
-  };
+      return (
+        <Marker
+          key={car._id}
+          coordinate={{
+            latitude: car.location.lat,
+            longitude: car.location.lng,
+          }}
+          title={`${car.make} ${car.model}`}
+          description={`$${car.pricePerDay}/day`}
+          pinColor={COLORS.gold[500]}
+          onPress={() => {
+            if (car._id) {
+              router.push(`/(customer)/car/${car._id}`);
+            }
+          }}
+        />
+      );
+    });
+  }, [cars]);
 
   return (
     <View style={styles.container}>
@@ -608,7 +622,7 @@ export default function CustomerHome() {
               customMapStyle={darkMapStyle}
               onPress={closeCarCard}
             >
-              {cars.map(renderMapMarker)}
+              {mapMarkers}
             </MapView>
 
             {/* Map Controls */}

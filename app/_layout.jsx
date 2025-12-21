@@ -36,7 +36,7 @@ export default function RootLayout() {
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(customer)" />
         <Stack.Screen name="(host)" />
-        
+
         {/* Specific Screens */}
         <Stack.Screen name="kyc/index" />
         <Stack.Screen name="modal" options={{ presentation: 'modal' }} />

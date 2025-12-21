@@ -27,7 +27,7 @@ export const AuthProvider = ({ children }) => {
 
   // ✅ HELPER: Centralized Auth Finalizer
   // Handles Token Saving + Header Setting + Redirects
-  const finalizeAuth = async (token, userData) => {
+  const finalizeAuth = async (token, userData, skipKycCheck = false) => {
     try {
       // 1. Set Header via Service (Fixes "Session Expired")
       authService.setToken(token);
@@ -39,10 +39,17 @@ export const AuthProvider = ({ children }) => {
       setUser(userData);
 
       // 4. Refresh KYC Status (if applicable)
-      await refreshKycStatus();
+      const kycStat = await refreshKycStatus();
 
-      // 5. Redirect based on role
-      redirectByRole(userData.role);
+      // 5. Check if user needs KYC verification (for new users)
+      // If KYC is missing and skipKycCheck is false, redirect to KYC screen
+      if (!skipKycCheck && (kycStat === "missing" || kycStat === undefined)) {
+        console.log("New user detected, redirecting to KYC with role:", userData.role);
+        router.replace(`/kyc?role=${userData.role}`);
+      } else {
+        // Redirect based on role for verified users
+        redirectByRole(userData.role);
+      }
     } catch (error) {
       console.error("Finalize Auth Error:", error);
     }
@@ -119,7 +126,8 @@ export const AuthProvider = ({ children }) => {
       const user = data.user;
 
       if (token && user) {
-        await finalizeAuth(token, user);
+        // Skip KYC check for normal login (returning users)
+        await finalizeAuth(token, user, true);
         return { success: true };
       }
 
@@ -158,19 +166,20 @@ export const AuthProvider = ({ children }) => {
         role,
       });
 
-      // Adjust based on your specific register API response structure
-      const { user, tokens, token } = response;
+      // response structure: { success, message, data: { user, tokens } }
+      const { user, tokens } = response.data || {};
 
       // Handle different token formats
-      let finalToken = token;
-      if (!finalToken && tokens) {
+      let finalToken = null;
+      if (tokens) {
         finalToken =
-          typeof tokens === "string" ? tokens : tokens?.access?.token;
+          typeof tokens === "string" ? tokens : tokens?.access?.token || tokens?.accessToken;
       }
 
-      if (finalToken) {
+      if (finalToken && user) {
         await finalizeAuth(finalToken, user);
-      } else {
+      } else if (user) {
+        // If no token but user exists, just set user
         setUser(user);
         setKycStatus("missing");
       }
