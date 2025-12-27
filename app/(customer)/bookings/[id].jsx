@@ -53,7 +53,7 @@ export default function CustomerBookingDetail() {
   const fetchBookingDetail = async () => {
     try {
       const response = await bookingService.getBookingDetails(id);
-      console.log("Booking Detail:", JSON.stringify(response, null, 2));
+      // console.log("Booking Detail:", JSON.stringify(response, null, 2));
 
       const bookingData = response.data?.booking || response.booking;
       setBooking(bookingData);
@@ -118,65 +118,33 @@ export default function CustomerBookingDetail() {
       return;
     }
 
+    // Use the direct PDF URL from booking data
+    const pdfUrl = booking.invoicePdfPath;
+
+    if (!pdfUrl) {
+      Alert.alert("Invoice Not Available", "Invoice PDF has not been generated yet.");
+      return;
+    }
+
     Alert.alert(
       "Download Invoice",
-      "Do you want to download the invoice PDF?",
+      "Open invoice PDF in browser?",
       [
         { text: "Cancel", style: "cancel" },
         {
-          text: "Download",
+          text: "Open",
           onPress: async () => {
-            setDownloading(true);
             try {
-              const bookingId = booking.id || booking._id;
-              const baseURL = api.defaults.baseURL;
-              const invoiceUrl = `${baseURL}/bookings/invoice/${bookingId}`;
-
-              // Get token
-              const token = api.defaults.headers.common["Authorization"];
-
-              console.log("Downloading from:", invoiceUrl);
-
-              const fileUri =
-                FileSystem.documentDirectory + `invoice_${bookingId}.pdf`;
-
-              const downloadResult = await FileSystem.downloadAsync(
-                invoiceUrl,
-                fileUri,
-                {
-                  headers: {
-                    Authorization: token,
-                  },
-                }
-              );
-
-              console.log("Download result:", downloadResult);
-
-              if (downloadResult.status === 200) {
-                const isAvailable = await Sharing.isAvailableAsync();
-
-                if (isAvailable) {
-                  await Sharing.shareAsync(downloadResult.uri, {
-                    mimeType: "application/pdf",
-                    dialogTitle: "Swift Ride Invoice",
-                  });
-                } else {
-                  Alert.alert("Success", "Invoice downloaded successfully!");
-                }
+              // Open PDF directly in browser - most reliable way
+              const canOpen = await Linking.canOpenURL(pdfUrl);
+              if (canOpen) {
+                await Linking.openURL(pdfUrl);
               } else {
-                throw new Error(
-                  `Download failed with status: ${downloadResult.status}`
-                );
+                Alert.alert("Error", "Cannot open PDF URL");
               }
             } catch (error) {
-              console.error("Download error:", error);
-              Alert.alert(
-                "Download Failed",
-                "Could not download invoice. Please try again later.",
-                [{ text: "OK" }]
-              );
-            } finally {
-              setDownloading(false);
+              console.error("Open PDF error:", error);
+              Alert.alert("Error", "Could not open invoice");
             }
           },
         },

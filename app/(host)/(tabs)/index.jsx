@@ -90,7 +90,8 @@ export default function HostDashboard() {
 
       try {
         const bookingResponse = await bookingService.getHostBookings();
-        const allBookings = bookingResponse.items || [];
+        // API returns { success, message, data: { items } }
+        const allBookings = bookingResponse.data?.items || bookingResponse.items || [];
         bookingCount = allBookings.length;
         pendingCount = allBookings.filter((b) => b.status === 'pending').length;
 
@@ -174,7 +175,7 @@ export default function HostDashboard() {
                 <View>
                   <Text style={styles.earningsLabel}>Total Earnings</Text>
                   <Text style={styles.earningsValue}>
-                    ${stats.totalEarnings.toLocaleString("en-US", {
+                    PKR {stats.totalEarnings.toLocaleString("en-US", {
                       minimumFractionDigits: 2,
                     })}
                   </Text>

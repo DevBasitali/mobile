@@ -133,7 +133,7 @@ export default function CreateBooking() {
   //   }
   // };
 
-    const handleConfirm = async () => {
+  const handleConfirm = async () => {
     if (endDate <= startDate) {
       Alert.alert('Invalid Dates', 'End time must be after start time.');
       return;
@@ -215,7 +215,7 @@ export default function CreateBooking() {
               {car.make} {car.model}
             </Text>
             <Text style={styles.price}>
-              ${car.pricePerDay}
+              PKR {car.pricePerDay}
               <Text style={styles.per}>/day</Text>
             </Text>
             <View style={styles.locRow}>
@@ -304,7 +304,7 @@ export default function CreateBooking() {
             <View style={styles.row}>
               <Text style={styles.rowLabel}>Rate</Text>
               <Text style={styles.rowVal}>
-                $
+                PKR{" "}
                 {car.pricePerHour
                   ? `${car.pricePerHour}/hr`
                   : `${car.pricePerDay}/day`}
@@ -313,7 +313,7 @@ export default function CreateBooking() {
             <View style={styles.divider} />
             <View style={styles.totalRow}>
               <Text style={styles.totalLabel}>Total Estimated</Text>
-              <Text style={styles.totalVal}>${calculateTotal()}</Text>
+              <Text style={styles.totalVal}>PKR {calculateTotal()}</Text>
             </View>
           </View>
         </View>

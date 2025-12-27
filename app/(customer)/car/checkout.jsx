@@ -7,9 +7,9 @@ export default function Checkout() {
   const { carId } = useLocalSearchParams();
   const [loading, setLoading] = useState(false);
   const [dates, setDates] = useState({ start: 'Dec 12', end: 'Dec 15', days: 3 });
-  
+
   // Dummy Price Calculation (Will connect to Backend later)
-  const pricePerDay = 50; 
+  const pricePerDay = 50;
   const total = pricePerDay * dates.days;
   const serviceFee = 15;
   const grandTotal = total + serviceFee;
@@ -28,59 +28,59 @@ export default function Checkout() {
   return (
     <View style={styles.container}>
       <Stack.Screen options={{ title: 'Confirm Booking', headerBackTitle: 'Back' }} />
-      
+
       <ScrollView contentContainerStyle={styles.content}>
         {/* CAR SUMMARY */}
         <View style={styles.card}>
-            <Text style={styles.sectionTitle}>Your Ride</Text>
-            <View style={styles.carRow}>
-                <View style={styles.placeholderImg}>
-                    <FontAwesome name="car" size={30} color="#888" />
-                </View>
-                <View>
-                    <Text style={styles.carTitle}>Toyota Camry</Text>
-                    <Text style={styles.carSub}>Automatic • 4 Seats</Text>
-                </View>
+          <Text style={styles.sectionTitle}>Your Ride</Text>
+          <View style={styles.carRow}>
+            <View style={styles.placeholderImg}>
+              <FontAwesome name="car" size={30} color="#888" />
             </View>
+            <View>
+              <Text style={styles.carTitle}>Toyota Camry</Text>
+              <Text style={styles.carSub}>Automatic • 4 Seats</Text>
+            </View>
+          </View>
         </View>
 
         {/* DATES */}
         <View style={styles.card}>
-            <View style={styles.row}>
-                <Text style={styles.label}>Dates</Text>
-                <TouchableOpacity>
-                    <Text style={styles.editLink}>Edit</Text>
-                </TouchableOpacity>
-            </View>
-            <View style={styles.dateBox}>
-                <Text style={styles.dateText}>{dates.start}  →  {dates.end}</Text>
-                <Text style={styles.daysText}>({dates.days} days)</Text>
-            </View>
+          <View style={styles.row}>
+            <Text style={styles.label}>Dates</Text>
+            <TouchableOpacity>
+              <Text style={styles.editLink}>Edit</Text>
+            </TouchableOpacity>
+          </View>
+          <View style={styles.dateBox}>
+            <Text style={styles.dateText}>{dates.start}  →  {dates.end}</Text>
+            <Text style={styles.daysText}>({dates.days} days)</Text>
+          </View>
         </View>
 
         {/* PRICE BREAKDOWN */}
         <View style={styles.card}>
-            <Text style={styles.sectionTitle}>Price Details</Text>
-            <View style={styles.priceRow}>
-                <Text style={styles.priceLabel}>${pricePerDay} x {dates.days} days</Text>
-                <Text style={styles.priceValue}>${total}</Text>
-            </View>
-            <View style={styles.priceRow}>
-                <Text style={styles.priceLabel}>Service Fee</Text>
-                <Text style={styles.priceValue}>${serviceFee}</Text>
-            </View>
-            <View style={styles.divider} />
-            <View style={styles.priceRow}>
-                <Text style={styles.totalLabel}>Total</Text>
-                <Text style={styles.totalValue}>${grandTotal}</Text>
-            </View>
+          <Text style={styles.sectionTitle}>Price Details</Text>
+          <View style={styles.priceRow}>
+            <Text style={styles.priceLabel}>PKR {pricePerDay} x {dates.days} days</Text>
+            <Text style={styles.priceValue}>PKR {total}</Text>
+          </View>
+          <View style={styles.priceRow}>
+            <Text style={styles.priceLabel}>Service Fee</Text>
+            <Text style={styles.priceValue}>PKR {serviceFee}</Text>
+          </View>
+          <View style={styles.divider} />
+          <View style={styles.priceRow}>
+            <Text style={styles.totalLabel}>Total</Text>
+            <Text style={styles.totalValue}>PKR {grandTotal}</Text>
+          </View>
         </View>
       </ScrollView>
 
       {/* FOOTER */}
       <View style={styles.footer}>
         <TouchableOpacity style={styles.payBtn} onPress={handlePayment} disabled={loading}>
-            {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.payText}>Pay ${grandTotal}</Text>}
+          {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.payText}>Pay PKR {grandTotal}</Text>}
         </TouchableOpacity>
       </View>
     </View>
@@ -92,7 +92,7 @@ const styles = StyleSheet.create({
   content: { padding: 20 },
   card: { backgroundColor: '#fff', padding: 20, borderRadius: 12, marginBottom: 20 },
   sectionTitle: { fontSize: 16, fontWeight: 'bold', marginBottom: 15 },
-  
+
   carRow: { flexDirection: 'row', alignItems: 'center' },
   placeholderImg: { width: 60, height: 60, backgroundColor: '#eee', borderRadius: 8, justifyContent: 'center', alignItems: 'center', marginRight: 15 },
   carTitle: { fontSize: 18, fontWeight: 'bold' },

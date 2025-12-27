@@ -246,7 +246,7 @@ export default function HostCarDetails() {
               <View style={styles.priceItem}>
                 <Text style={styles.priceLabel}>Per Day</Text>
                 <View style={styles.priceValueContainer}>
-                  <Text style={styles.currency}>$</Text>
+                  <Text style={styles.currency}>PKR </Text>
                   <Text style={styles.price}>{car.pricePerDay}</Text>
                 </View>
               </View>
@@ -254,7 +254,7 @@ export default function HostCarDetails() {
               <View style={styles.priceItem}>
                 <Text style={styles.priceLabel}>Per Hour</Text>
                 <View style={styles.priceValueContainer}>
-                  <Text style={styles.currency}>$</Text>
+                  <Text style={styles.currency}>PKR </Text>
                   <Text style={styles.price}>{car.pricePerHour}</Text>
                 </View>
               </View>

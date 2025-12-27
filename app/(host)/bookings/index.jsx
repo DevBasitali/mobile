@@ -45,15 +45,15 @@ export default function HostBookings() {
     }, [])
   );
 
-   const fetchBookings = async () => {
+  const fetchBookings = async () => {
     try {
       const response = await bookingService.getHostBookings();
-      
+
       // console.log("DEBUG HOST BOOKINGS:", JSON.stringify(response, null, 2));
 
       // ✅ FIX: Access the nested 'data.items'
       let items = [];
-      
+
       // Case 1: Standard API Response { success: true, data: { items: [...] } }
       if (response.data && response.data.items && Array.isArray(response.data.items)) {
         items = response.data.items;
@@ -115,7 +115,7 @@ export default function HostBookings() {
         style={styles.card}
       >
         <View style={[styles.statusStrip, { backgroundColor: statusColor }]} />
-        
+
         <View style={styles.cardContent}>
           {/* Header */}
           <View style={styles.cardHeader}>
@@ -142,7 +142,7 @@ export default function HostBookings() {
               <Text style={styles.durationText}>{item.durationHours} Hours Trip</Text>
             </View>
             <View style={styles.priceContainer}>
-              <Text style={styles.price}>${item.totalPrice}</Text>
+              <Text style={styles.price}>PKR {item.totalPrice}</Text>
             </View>
           </View>
 
@@ -161,7 +161,7 @@ export default function HostBookings() {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={COLORS.navy[900]} />
-      
+
       {/* Header */}
       <LinearGradient colors={[COLORS.navy[900], COLORS.navy[800]]} style={styles.header}>
         <SafeAreaView edges={['top', 'left', 'right']} style={styles.headerContent}>
@@ -223,7 +223,7 @@ export default function HostBookings() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.navy[900] },
-  
+
   header: { paddingBottom: 15, borderBottomLeftRadius: 24, borderBottomRightRadius: 24 },
   headerContent: { paddingHorizontal: 20, paddingTop: 10 },
   titleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
@@ -256,7 +256,7 @@ const styles = StyleSheet.create({
   avatarText: { color: COLORS.white, fontWeight: '700', fontSize: 16 },
   renterName: { fontSize: 14, fontWeight: '600', color: COLORS.white },
   durationText: { fontSize: 12, color: COLORS.gray[400] },
-  
+
   priceContainer: { flex: 1, alignItems: 'flex-end' },
   price: { fontSize: 16, fontWeight: '700', color: COLORS.gold[500] },
 

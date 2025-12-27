@@ -341,7 +341,7 @@ export default function CustomerHome() {
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
           >
-            <Text style={styles.priceText}>${item.pricePerDay}</Text>
+            <Text style={styles.priceText}>PKR {item.pricePerDay}</Text>
             <Text style={styles.dayText}>/day</Text>
           </LinearGradient>
         </View>
@@ -403,7 +403,7 @@ export default function CustomerHome() {
             longitude: car.location.lng,
           }}
           title={`${car.make} ${car.model}`}
-          description={`$${car.pricePerDay}/day`}
+          description={`PKR ${car.pricePerDay}/day`}
           pinColor={COLORS.gold[500]}
           onPress={() => {
             if (car._id) {
@@ -721,7 +721,7 @@ export default function CustomerHome() {
                       </View>
                       <View style={styles.selectedCarPriceBox}>
                         <Text style={styles.selectedCarPrice}>
-                          ${selectedCar.pricePerDay || '0'}
+                          PKR {selectedCar.pricePerDay || '0'}
                         </Text>
                         <Text style={styles.selectedCarPriceLabel}>/day</Text>
                       </View>

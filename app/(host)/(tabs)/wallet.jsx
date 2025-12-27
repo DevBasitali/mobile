@@ -19,11 +19,11 @@ const COLORS = {
 
 // 💰 Mock Data for Transactions
 const TRANSACTIONS = [
-  { id: '1', title: 'Payout for BMW X5', date: 'Today, 10:30 AM', amount: '+$450.00', type: 'credit' },
-  { id: '2', title: 'Withdrawal to Bank', date: 'Yesterday, 4:00 PM', amount: '-$1,200.00', type: 'debit' },
-  { id: '3', title: 'Payout for Tesla Model 3', date: 'Oct 24, 2023', amount: '+$320.00', type: 'credit' },
-  { id: '4', title: 'Insurance Deduction', date: 'Oct 22, 2023', amount: '-$45.00', type: 'debit' },
-  { id: '5', title: 'Payout for Audi A4', date: 'Oct 20, 2023', amount: '+$210.00', type: 'credit' },
+  { id: '1', title: 'Payout for BMW X5', date: 'Today, 10:30 AM', amount: '+PKR 450.00', type: 'credit' },
+  { id: '2', title: 'Withdrawal to Bank', date: 'Yesterday, 4:00 PM', amount: '-PKR 1,200.00', type: 'debit' },
+  { id: '3', title: 'Payout for Tesla Model 3', date: 'Oct 24, 2023', amount: '+PKR 320.00', type: 'credit' },
+  { id: '4', title: 'Insurance Deduction', date: 'Oct 22, 2023', amount: '-PKR 45.00', type: 'debit' },
+  { id: '5', title: 'Payout for Audi A4', date: 'Oct 20, 2023', amount: '+PKR 210.00', type: 'credit' },
 ];
 
 export default function HostWallet() {
@@ -32,7 +32,7 @@ export default function HostWallet() {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={COLORS.background} />
-      
+
       <View style={styles.header}>
         <Text style={styles.headerTitle}>My Wallet</Text>
         <TouchableOpacity style={styles.iconBtn}>
@@ -41,7 +41,7 @@ export default function HostWallet() {
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-        
+
         {/* 💳 PREMIUM BALANCE CARD */}
         <LinearGradient
           colors={[COLORS.gold, COLORS.goldDark]}
@@ -52,28 +52,29 @@ export default function HostWallet() {
           <View style={styles.cardHeader}>
             <Text style={styles.cardLabel}>Total Balance</Text>
             <TouchableOpacity onPress={() => setBalanceVisible(!balanceVisible)}>
-              <Ionicons 
-                name={balanceVisible ? "eye" : "eye-off"} 
-                size={20} 
-                color="rgba(255,255,255,0.8)" 
+              <Ionicons
+                name={balanceVisible ? "eye" : "eye-off"}
+                size={20}
+                color="rgba(255,255,255,0.8)"
               />
             </TouchableOpacity>
           </View>
 
           <Text style={styles.balanceAmount}>
-            {balanceVisible ? '$2,450.00' : '•••••••'}
+            {balanceVisible ? 'PKR 2,450.00' : '•••••••'}
           </Text>
+
 
           <View style={styles.cardFooter}>
             <View>
               <Text style={styles.footerLabel}>Pending</Text>
-              <Text style={styles.footerValue}>$120.00</Text>
+              <Text style={styles.footerValue}>PKR 120.00</Text>
             </View>
             <View style={styles.chip}>
               <Text style={styles.chipText}>+12% this week</Text>
             </View>
           </View>
-          
+
           {/* Decorative Circles */}
           <View style={styles.circle1} />
           <View style={styles.circle2} />
@@ -100,10 +101,10 @@ export default function HostWallet() {
             <View key={item.id} style={styles.transactionItem}>
               <View style={styles.transLeft}>
                 <View style={[styles.iconBox, item.type === 'debit' ? styles.debitIcon : styles.creditIcon]}>
-                  <Ionicons 
-                    name={item.type === 'credit' ? "arrow-down" : "arrow-up"} 
-                    size={18} 
-                    color={COLORS.white} 
+                  <Ionicons
+                    name={item.type === 'credit' ? "arrow-down" : "arrow-up"}
+                    size={18}
+                    color={COLORS.white}
                   />
                 </View>
                 <View>
@@ -119,7 +120,7 @@ export default function HostWallet() {
         </View>
 
       </ScrollView>
-    </SafeAreaView>
+    </SafeAreaView >
   );
 }
 
@@ -162,7 +163,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS.border,
   },
-  
+
   // Balance Card
   balanceCard: {
     borderRadius: 24,

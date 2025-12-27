@@ -1,9 +1,8 @@
 // app/(customer)/(tabs)/_layout.jsx
 import React from 'react';
 import { Tabs } from 'expo-router';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Platform, StyleSheet, View } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 
 // ============================================
 // 🎨 INLINE THEME COLORS
@@ -18,7 +17,7 @@ const COLORS = {
     500: '#F59E0B',
   },
   gray: {
-    500: '#6B7280',
+    500: '#64748B',
   },
   white: '#FFFFFF',
 };
@@ -39,10 +38,11 @@ export default function CustomerTabs() {
           backgroundColor: COLORS.navy[900],
           borderTopWidth: 1,
           borderTopColor: COLORS.navy[700],
-          height: Platform.OS === 'ios' ? 88 : 65,
+          height: Platform.OS === 'ios' ? 88 : 68,
           paddingBottom: Platform.OS === 'ios' ? 28 : 10,
-          paddingTop: 10,
+          paddingTop: 12,
           paddingHorizontal: 10,
+          shadowOpacity: 0,
         },
         tabBarLabelStyle: {
           fontSize: 11,
@@ -60,9 +60,9 @@ export default function CustomerTabs() {
           title: 'Explore',
           tabBarIcon: ({ color, focused }) => (
             <View style={[styles.iconContainer, focused && styles.iconContainerActive]}>
-              <Ionicons
-                name={focused ? 'search' : 'search-outline'}
-                size={24}
+              <MaterialCommunityIcons
+                name={focused ? 'compass' : 'compass-outline'}
+                size={26}
                 color={color}
               />
             </View>
@@ -72,12 +72,12 @@ export default function CustomerTabs() {
       <Tabs.Screen
         name="bookings"
         options={{
-          title: 'Trips',
+          title: 'My Trips',
           tabBarIcon: ({ color, focused }) => (
             <View style={[styles.iconContainer, focused && styles.iconContainerActive]}>
               <MaterialCommunityIcons
-                name={focused ? 'calendar-check' : 'calendar-check-outline'}
-                size={24}
+                name={focused ? 'car-clock' : 'car-clock'}
+                size={26}
                 color={color}
               />
             </View>
@@ -90,9 +90,9 @@ export default function CustomerTabs() {
           title: 'Profile',
           tabBarIcon: ({ color, focused }) => (
             <View style={[styles.iconContainer, focused && styles.iconContainerActive]}>
-              <Ionicons
-                name={focused ? 'person' : 'person-outline'}
-                size={24}
+              <MaterialCommunityIcons
+                name={focused ? 'account-circle' : 'account-circle-outline'}
+                size={26}
                 color={color}
               />
             </View>

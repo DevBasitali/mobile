@@ -54,9 +54,9 @@ export default function BookingDetails() {
     try {
       // ✅ Status must be 'confirmed' or 'cancelled'
       console.log(`Updating booking ${id} to ${status}`);
-      
+
       await bookingService.updateBookingStatus(id, status);
-      
+
       Alert.alert('Success', `Booking ${status} successfully!`, [
         { text: 'OK', onPress: () => fetchDetails() }
       ]);
@@ -100,7 +100,7 @@ export default function BookingDetails() {
       </LinearGradient>
 
       <ScrollView contentContainerStyle={styles.scroll}>
-        
+
         {/* Status Card */}
         <View style={styles.statusCard}>
           <Text style={styles.statusLabel}>STATUS</Text>
@@ -116,9 +116,9 @@ export default function BookingDetails() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>VEHICLE</Text>
           <View style={styles.carCard}>
-            <Image 
-              source={{ uri: carService.getImageUrl(booking.car?.photos?.[0]) }} 
-              style={styles.carImage} 
+            <Image
+              source={{ uri: carService.getImageUrl(booking.car?.photos?.[0]) }}
+              style={styles.carImage}
             />
             <View style={styles.carInfo}>
               <Text style={styles.carName}>{booking.car?.make} {booking.car?.model}</Text>
@@ -174,12 +174,12 @@ export default function BookingDetails() {
           <View style={styles.earningsCard}>
             <View style={styles.earningRow}>
               <Text style={styles.earningLabel}>Total Price</Text>
-              <Text style={styles.earningValue}>${booking.totalPrice}</Text>
+              <Text style={styles.earningValue}>PKR {booking.totalPrice}</Text>
             </View>
             <View style={styles.earningDivider} />
             <View style={styles.earningRow}>
               <Text style={styles.netLabel}>Your Earnings</Text>
-              <Text style={styles.netValue}>${booking.ownerEarningAmount}</Text>
+              <Text style={styles.netValue}>PKR {booking.ownerEarningAmount}</Text>
             </View>
           </View>
         </View>
@@ -189,16 +189,16 @@ export default function BookingDetails() {
       {/* Action Footer */}
       {booking.status === 'pending' && (
         <View style={styles.footer}>
-          <TouchableOpacity 
-            style={styles.declineBtn} 
+          <TouchableOpacity
+            style={styles.declineBtn}
             onPress={() => handleStatusUpdate('cancelled')}
             disabled={actionLoading}
           >
             <Text style={styles.declineText}>Decline</Text>
           </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={styles.acceptBtn} 
+
+          <TouchableOpacity
+            style={styles.acceptBtn}
             onPress={() => handleStatusUpdate('confirmed')}
             disabled={actionLoading}
           >
@@ -229,7 +229,7 @@ const getStatusColor = (status) => {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.navy[900] },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: COLORS.navy[900] },
-  
+
   header: { paddingBottom: 20, borderBottomLeftRadius: 30, borderBottomRightRadius: 30 },
   headerContent: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, marginTop: 10 },
   headerTitle: { color: COLORS.white, fontSize: 18, fontWeight: '700' },

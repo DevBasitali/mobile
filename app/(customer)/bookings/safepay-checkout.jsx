@@ -59,15 +59,24 @@ export default function SafepayCheckoutScreen() {
         );
     };
 
-    // Check if URL is a redirect URL
+    // Check if URL is a redirect URL (supports both deep links and web URLs)
+    // EXCLUDE Safepay checkout pages (they contain redirect URLs in query params)
+    const isSafepayCheckoutUrl = (url) => {
+        return url.includes("sandbox.api.getsafepay.com") ||
+            url.includes("api.getsafepay.com") ||
+            url.includes("safepay.com/checkout");
+    };
+
     const isSuccessUrl = (url) => {
+        if (isSafepayCheckoutUrl(url)) return false; // Don't trigger on checkout page
         return url.includes("swiftride://payment/success") ||
-            (url.includes("/payment/success") && !url.includes("safepay"));
+            url.includes("/payment/success");
     };
 
     const isCancelUrl = (url) => {
+        if (isSafepayCheckoutUrl(url)) return false; // Don't trigger on checkout page
         return url.includes("swiftride://payment/cancel") ||
-            (url.includes("/payment/cancel") && !url.includes("safepay"));
+            url.includes("/payment/cancel");
     };
 
     // Handle requests before they load (iOS/Android)
