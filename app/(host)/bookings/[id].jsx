@@ -186,7 +186,7 @@ export default function BookingDetails() {
 
       </ScrollView>
 
-      {/* Action Footer */}
+      {/* Action Footer - Pending */}
       {booking.status === 'pending' && (
         <View style={styles.footer}>
           <TouchableOpacity
@@ -207,6 +207,69 @@ export default function BookingDetails() {
                 <ActivityIndicator color={COLORS.navy[900]} />
               ) : (
                 <Text style={styles.acceptText}>Accept Request</Text>
+              )}
+            </LinearGradient>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {/* Action Footer - Confirmed (Start Trip) */}
+      {booking.status === 'confirmed' && (
+        <View style={styles.footer}>
+          <TouchableOpacity
+            style={styles.declineBtn}
+            onPress={() => handleStatusUpdate('cancelled')}
+            disabled={actionLoading}
+          >
+            <Text style={styles.declineText}>Cancel</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.acceptBtn}
+            onPress={() => handleStatusUpdate('ongoing')}
+            disabled={actionLoading}
+          >
+            <LinearGradient colors={[COLORS.emerald[500], '#34D399']} style={styles.gradientBtn}>
+              {actionLoading ? (
+                <ActivityIndicator color={COLORS.white} />
+              ) : (
+                <Text style={[styles.acceptText, { color: COLORS.white }]}>Start Trip</Text>
+              )}
+            </LinearGradient>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {/* Action Footer - Ongoing (Track + Complete Trip) */}
+      {booking.status === 'ongoing' && (
+        <View style={styles.footer}>
+          {/* Track Car Button */}
+          <TouchableOpacity
+            style={styles.trackBtn}
+            onPress={() => router.push({
+              pathname: '/(host)/bookings/track',
+              params: {
+                bookingId: booking._id || booking.id,
+                carName: `${booking.car?.make} ${booking.car?.model}`,
+                customerName: booking.customer?.fullName,
+              }
+            })}
+          >
+            <Ionicons name="location" size={20} color={COLORS.gold[500]} />
+            <Text style={styles.trackText}>Track</Text>
+          </TouchableOpacity>
+
+          {/* Complete Trip Button */}
+          <TouchableOpacity
+            style={[styles.acceptBtn, { flex: 1 }]}
+            onPress={() => handleStatusUpdate('completed')}
+            disabled={actionLoading}
+          >
+            <LinearGradient colors={[COLORS.gold[500], '#FBBF24']} style={styles.gradientBtn}>
+              {actionLoading ? (
+                <ActivityIndicator color={COLORS.navy[900]} />
+              ) : (
+                <Text style={styles.acceptText}>Complete Trip</Text>
               )}
             </LinearGradient>
           </TouchableOpacity>
@@ -281,4 +344,19 @@ const styles = StyleSheet.create({
   acceptBtn: { flex: 2, borderRadius: 12, overflow: 'hidden' },
   gradientBtn: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   acceptText: { color: COLORS.navy[900], fontWeight: '700' },
+
+  // Track button
+  trackBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingHorizontal: 16,
+    height: 50,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: COLORS.gold[500],
+    backgroundColor: COLORS.navy[800],
+  },
+  trackText: { color: COLORS.gold[500], fontWeight: '700' },
 });
