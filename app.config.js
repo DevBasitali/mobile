@@ -72,7 +72,17 @@ export default ({ config }) => {
         plugins: [
             "expo-router",
             "expo-secure-store",
-            "@react-native-google-signin/google-signin"
+            "@react-native-google-signin/google-signin",
+            [
+                "expo-location",
+                {
+                    "locationAlwaysAndWhenInUsePermission": "This app needs your location to track your car rental trip for the host's peace of mind.",
+                    "locationAlwaysPermission": "Allow SwiftRide to access your location in the background for car tracking during your rental.",
+                    "locationWhenInUsePermission": "Allow SwiftRide to access your location while using the app.",
+                    "isAndroidBackgroundLocationEnabled": true,
+                    "isIosBackgroundLocationEnabled": true
+                }
+            ]
         ],
         experiments: {
             typedRoutes: true

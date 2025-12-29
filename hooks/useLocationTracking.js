@@ -35,7 +35,7 @@ export const useLocationTracking = (bookingId, isActive = false) => {
                 watchRef.current = await Location.watchPositionAsync(
                     {
                         accuracy: Location.Accuracy.High,
-                        timeInterval: 5000, // Update every 5 seconds
+                        timeInterval: 10000, // Update every 10 seconds
                         distanceInterval: 10, // Or every 10 meters
                     },
                     (newLocation) => {
