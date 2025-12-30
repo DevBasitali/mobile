@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, FlatList, StatusBar } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, StatusBar, RefreshControl } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { getWallet, getTransactions } from '../../../services/walletService';
 
 // 🎨 Swift Ride Premium Theme
 const COLORS = {
@@ -17,17 +18,85 @@ const COLORS = {
   border: '#2A4A73'
 };
 
-// 💰 Mock Data for Transactions
-const TRANSACTIONS = [
-  { id: '1', title: 'Payout for BMW X5', date: 'Today, 10:30 AM', amount: '+PKR 450.00', type: 'credit' },
-  { id: '2', title: 'Withdrawal to Bank', date: 'Yesterday, 4:00 PM', amount: '-PKR 1,200.00', type: 'debit' },
-  { id: '3', title: 'Payout for Tesla Model 3', date: 'Oct 24, 2023', amount: '+PKR 320.00', type: 'credit' },
-  { id: '4', title: 'Insurance Deduction', date: 'Oct 22, 2023', amount: '-PKR 45.00', type: 'debit' },
-  { id: '5', title: 'Payout for Audi A4', date: 'Oct 20, 2023', amount: '+PKR 210.00', type: 'credit' },
-];
-
 export default function HostWallet() {
   const [balanceVisible, setBalanceVisible] = useState(true);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [wallet, setWallet] = useState(null);
+  const [transactions, setTransactions] = useState([]);
+  const [error, setError] = useState(null);
+
+  const fetchWalletData = async () => {
+    try {
+      setError(null);
+      const [walletRes, txRes] = await Promise.all([
+        getWallet(),
+        getTransactions(20)
+      ]);
+
+      // Handle wallet response
+      const walletData = walletRes?.data || walletRes;
+      setWallet(walletData);
+
+      // Handle transactions response
+      const txData = txRes?.data?.items || txRes?.items || [];
+      setTransactions(txData);
+    } catch (err) {
+      console.log('Wallet fetch error:', err.message);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchWalletData();
+  }, []);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    fetchWalletData();
+  }, []);
+
+  const formatAmount = (amount) => {
+    if (!amount && amount !== 0) return 'PKR 0.00';
+    return `PKR ${Number(amount).toLocaleString('en-PK', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffDays = Math.floor((now - date) / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 0) return `Today, ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+    if (diffDays === 1) return `Yesterday, ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+    return date.toLocaleDateString('en-PK', { month: 'short', day: 'numeric', year: 'numeric' });
+  };
+
+  const getTransactionType = (tx) => {
+    if (tx.type === 'payout') return 'debit';
+    return 'credit'; // earning or adjustment (positive)
+  };
+
+  const getTransactionTitle = (tx) => {
+    if (tx.type === 'earning') {
+      return `Booking Earning ${tx.status === 'pending' ? '(Pending)' : ''}`;
+    }
+    if (tx.type === 'payout') return 'Withdrawal to Bank';
+    return tx.description || 'Transaction';
+  };
+
+  if (loading) {
+    return (
+      <View style={[styles.container, styles.centerContent]}>
+        <StatusBar barStyle="light-content" backgroundColor={COLORS.background} />
+        <ActivityIndicator size="large" color={COLORS.gold} />
+        <Text style={styles.loadingText}>Loading wallet...</Text>
+      </View>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -35,12 +104,18 @@ export default function HostWallet() {
 
       <View style={styles.header}>
         <Text style={styles.headerTitle}>My Wallet</Text>
-        <TouchableOpacity style={styles.iconBtn}>
-          <Ionicons name="notifications-outline" size={24} color={COLORS.white} />
+        <TouchableOpacity style={styles.iconBtn} onPress={onRefresh}>
+          <Ionicons name="refresh-outline" size={24} color={COLORS.white} />
         </TouchableOpacity>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.gold} />
+        }
+      >
 
         {/* 💳 PREMIUM BALANCE CARD */}
         <LinearGradient
@@ -50,7 +125,7 @@ export default function HostWallet() {
           style={styles.balanceCard}
         >
           <View style={styles.cardHeader}>
-            <Text style={styles.cardLabel}>Total Balance</Text>
+            <Text style={styles.cardLabel}>Available Balance</Text>
             <TouchableOpacity onPress={() => setBalanceVisible(!balanceVisible)}>
               <Ionicons
                 name={balanceVisible ? "eye" : "eye-off"}
@@ -61,17 +136,19 @@ export default function HostWallet() {
           </View>
 
           <Text style={styles.balanceAmount}>
-            {balanceVisible ? 'PKR 2,450.00' : '•••••••'}
+            {balanceVisible ? formatAmount(wallet?.balanceAvailable) : '•••••••'}
           </Text>
-
 
           <View style={styles.cardFooter}>
             <View>
               <Text style={styles.footerLabel}>Pending</Text>
-              <Text style={styles.footerValue}>PKR 120.00</Text>
+              <Text style={styles.footerValue}>
+                {balanceVisible ? formatAmount(wallet?.balancePending) : '•••••'}
+              </Text>
             </View>
             <View style={styles.chip}>
-              <Text style={styles.chipText}>+12% this week</Text>
+              <Ionicons name="wallet-outline" size={14} color={COLORS.white} />
+              <Text style={styles.chipText}> {wallet?.currency || 'PKR'}</Text>
             </View>
           </View>
 
@@ -91,36 +168,60 @@ export default function HostWallet() {
         {/* 📝 RECENT TRANSACTIONS */}
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Recent Transactions</Text>
-          <TouchableOpacity>
-            <Text style={styles.seeAll}>See All</Text>
-          </TouchableOpacity>
+          {transactions.length > 0 && (
+            <TouchableOpacity>
+              <Text style={styles.seeAll}>See All</Text>
+            </TouchableOpacity>
+          )}
         </View>
 
-        <View style={styles.transactionsList}>
-          {TRANSACTIONS.map((item) => (
-            <View key={item.id} style={styles.transactionItem}>
-              <View style={styles.transLeft}>
-                <View style={[styles.iconBox, item.type === 'debit' ? styles.debitIcon : styles.creditIcon]}>
-                  <Ionicons
-                    name={item.type === 'credit' ? "arrow-down" : "arrow-up"}
-                    size={18}
-                    color={COLORS.white}
-                  />
+        {error && (
+          <View style={styles.errorBox}>
+            <Text style={styles.errorText}>Failed to load transactions</Text>
+          </View>
+        )}
+
+        {transactions.length === 0 && !error ? (
+          <View style={styles.emptyState}>
+            <Ionicons name="receipt-outline" size={48} color={COLORS.gray} />
+            <Text style={styles.emptyText}>No transactions yet</Text>
+            <Text style={styles.emptySubtext}>Your earnings will appear here</Text>
+          </View>
+        ) : (
+          <View style={styles.transactionsList}>
+            {transactions.map((item) => {
+              const txType = getTransactionType(item);
+              return (
+                <View key={item.id || item._id} style={styles.transactionItem}>
+                  <View style={styles.transLeft}>
+                    <View style={[styles.iconBox, txType === 'debit' ? styles.debitIcon : styles.creditIcon]}>
+                      <Ionicons
+                        name={txType === 'credit' ? "arrow-down" : "arrow-up"}
+                        size={18}
+                        color={COLORS.white}
+                      />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.transTitle}>{getTransactionTitle(item)}</Text>
+                      <Text style={styles.transDate}>{formatDate(item.createdAt)}</Text>
+                      {item.status === 'pending' && (
+                        <View style={styles.pendingBadge}>
+                          <Text style={styles.pendingText}>Pending</Text>
+                        </View>
+                      )}
+                    </View>
+                  </View>
+                  <Text style={[styles.transAmount, txType === 'credit' ? styles.textSuccess : styles.textDanger]}>
+                    {txType === 'credit' ? '+' : '-'}{formatAmount(item.amount)}
+                  </Text>
                 </View>
-                <View>
-                  <Text style={styles.transTitle}>{item.title}</Text>
-                  <Text style={styles.transDate}>{item.date}</Text>
-                </View>
-              </View>
-              <Text style={[styles.transAmount, item.type === 'credit' ? styles.textSuccess : styles.textDanger]}>
-                {item.amount}
-              </Text>
-            </View>
-          ))}
-        </View>
+              );
+            })}
+          </View>
+        )}
 
       </ScrollView>
-    </SafeAreaView >
+    </SafeAreaView>
   );
 }
 
@@ -138,6 +239,15 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.background,
+  },
+  centerContent: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    color: COLORS.gray,
+    marginTop: 12,
+    fontSize: 14,
   },
   scrollContent: {
     padding: 20,
@@ -204,6 +314,8 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   chip: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: 'rgba(255,255,255,0.2)',
     paddingHorizontal: 12,
     paddingVertical: 6,
@@ -294,6 +406,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
+    flex: 1,
   },
   iconBox: {
     width: 40,
@@ -306,7 +419,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.success,
   },
   debitIcon: {
-    backgroundColor: COLORS.danger, // Red for withdrawals
+    backgroundColor: COLORS.danger,
   },
   transTitle: {
     color: COLORS.white,
@@ -319,13 +432,51 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   transAmount: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: 'bold',
   },
   textSuccess: {
     color: COLORS.success,
   },
   textDanger: {
-    color: COLORS.white, // Keep deduction text white or slightly muted
-  }
+    color: COLORS.danger,
+  },
+  pendingBadge: {
+    backgroundColor: COLORS.gold + '30',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 4,
+    marginTop: 4,
+    alignSelf: 'flex-start',
+  },
+  pendingText: {
+    color: COLORS.gold,
+    fontSize: 10,
+    fontWeight: '600',
+  },
+  emptyState: {
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  emptyText: {
+    color: COLORS.white,
+    fontSize: 16,
+    fontWeight: '600',
+    marginTop: 16,
+  },
+  emptySubtext: {
+    color: COLORS.gray,
+    fontSize: 14,
+    marginTop: 4,
+  },
+  errorBox: {
+    backgroundColor: COLORS.danger + '20',
+    padding: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  errorText: {
+    color: COLORS.danger,
+    fontSize: 14,
+  },
 });
