@@ -21,6 +21,7 @@ import bookingService from "../../../services/bookingService";
 import carService from "../../../services/carService";
 import api from "../../../services/api";
 import { useLocationTracking } from "../../../hooks/useLocationTracking";
+import QRCodeDisplay from "../../../components/QRCodeDisplay";
 
 // Premium Theme
 const COLORS = {
@@ -41,6 +42,7 @@ export default function CustomerBookingDetail() {
   const [booking, setBooking] = useState(null);
   const [loading, setLoading] = useState(true);
   const [downloading, setDownloading] = useState(false);
+  const [showQR, setShowQR] = useState(false);
 
   // Location tracking - only active when booking is ongoing
   const isOngoing = booking?.status === "ongoing";
@@ -409,6 +411,17 @@ export default function CustomerBookingDetail() {
             <Ionicons name="chatbubble" size={20} color={COLORS.blue[500]} />
             <Text style={styles.actionText}>Contact Host</Text>
           </TouchableOpacity>
+
+          {/* QR Code Button - Show for confirmed/ongoing bookings */}
+          {(booking.status === 'confirmed' || booking.status === 'ongoing') && booking.handoverSecret && (
+            <TouchableOpacity
+              style={[styles.actionBtn, { backgroundColor: COLORS.gold[500] + '20' }]}
+              onPress={() => setShowQR(true)}
+            >
+              <Ionicons name="qr-code" size={20} color={COLORS.gold[500]} />
+              <Text style={[styles.actionText, { color: COLORS.gold[500] }]}>Show QR Code</Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* Info Note for Pending */}
@@ -426,6 +439,14 @@ export default function CustomerBookingDetail() {
           </View>
         )}
       </ScrollView>
+
+      {/* QR Code Modal */}
+      <QRCodeDisplay
+        visible={showQR}
+        onClose={() => setShowQR(false)}
+        qrValue={booking?.handoverSecret}
+        title="Handover QR Code"
+      />
     </View>
   );
 }

@@ -34,7 +34,7 @@ function BackgroundLocationTracker() {
           // console.log('🚗 Found ongoing booking:', bookingIdToUse);
           setOngoingBookingId(bookingIdToUse);
         } else {
-          console.log('ℹ️ No ongoing booking found');
+          // console.log('ℹ️ No ongoing booking found');
           setOngoingBookingId(null);
         }
       } catch (error) {

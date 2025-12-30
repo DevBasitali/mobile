@@ -82,6 +82,12 @@ export default ({ config }) => {
                     "isAndroidBackgroundLocationEnabled": true,
                     "isIosBackgroundLocationEnabled": true
                 }
+            ],
+            [
+                "expo-camera",
+                {
+                    "cameraPermission": "Allow SwiftRide to access your camera to scan QR codes and take photos for car handover."
+                }
             ]
         ],
         experiments: {
