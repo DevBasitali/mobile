@@ -275,6 +275,8 @@ export default function BookingDetails() {
                 </Text>
                 <View style={styles.carMetaRow}>
                   <Text style={styles.carYear}>{booking.car?.year}</Text>
+                  <View style={styles.separator} />
+                  <Text style={styles.carYear}>{booking.car?.color}</Text>
                   <View style={styles.plateTag}>
                     <Text style={styles.plate}>{booking.car?.plateNumber}</Text>
                   </View>
@@ -715,6 +717,12 @@ const styles = StyleSheet.create({
   },
   carMetaRow: { flexDirection: "row", alignItems: "center", gap: 10 },
   carYear: { color: COLORS.gray[400], fontSize: 14, fontWeight: "500" },
+  separator: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: COLORS.gray[500],
+  },
   plateTag: {
     backgroundColor: COLORS.gold[500],
     paddingHorizontal: 6,
