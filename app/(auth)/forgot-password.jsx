@@ -10,6 +10,8 @@ import {
   StatusBar,
   Animated,
   Dimensions,
+  KeyboardAvoidingView,
+  ActivityIndicator,
 } from "react-native";
 import { Stack, router } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";

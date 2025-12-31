@@ -55,6 +55,31 @@ const authService = {
     return response.data;
   },
 
+  // Change Password
+  changePassword: async (oldPassword, newPassword) => {
+    const response = await api.post("/auth/change-password", {
+      oldPassword,
+      newPassword,
+    });
+    return response.data;
+  },
+
+  // Update Profile
+  updateProfile: async (data) => {
+    const response = await api.patch("/users/profile", data);
+    return response.data;
+  },
+
+  // Update Profile Picture
+  updateProfilePicture: async (formData) => {
+    const response = await api.put("/users/profile-picture", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    return response.data;
+  },
+
   googleLoginRequest: googleLoginRequest,
 };
 

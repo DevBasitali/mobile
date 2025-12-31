@@ -1,5 +1,5 @@
 // app/(host)/(tabs)/profile.jsx
-import React from 'react';
+import React from "react";
 import {
   View,
   Text,
@@ -8,49 +8,50 @@ import {
   ScrollView,
   Alert,
   StatusBar,
-} from 'react-native';
-import { useAuth } from '../../../context/AuthContext';
-import { useAlert } from '../../../context/AlertContext';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { router, useFocusEffect } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useCallback } from 'react';
+  Image,
+} from "react-native";
+import { useAuth } from "../../../context/AuthContext";
+import { useAlert } from "../../../context/AlertContext";
+import { LinearGradient } from "expo-linear-gradient";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { router, useFocusEffect } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useCallback } from "react";
 
 // ============================================
 // 🎨 INLINE THEME COLORS
 // ============================================
 const COLORS = {
   navy: {
-    900: '#0A1628',
-    800: '#0F2137',
-    700: '#152A46',
-    600: '#1E3A5F',
+    900: "#0A1628",
+    800: "#0F2137",
+    700: "#152A46",
+    600: "#1E3A5F",
   },
   gold: {
-    500: '#F59E0B',
-    400: '#FBBF24',
+    500: "#F59E0B",
+    400: "#FBBF24",
   },
   emerald: {
-    500: '#10B981',
+    500: "#10B981",
   },
   blue: {
-    500: '#3B82F6',
+    500: "#3B82F6",
   },
   purple: {
-    500: '#8B5CF6',
+    500: "#8B5CF6",
   },
   orange: {
-    500: '#F97316',
+    500: "#F97316",
   },
   red: {
-    500: '#EF4444',
+    500: "#EF4444",
   },
   gray: {
-    500: '#6B7280',
-    400: '#9CA3AF',
+    500: "#6B7280",
+    400: "#9CA3AF",
   },
-  white: '#FFFFFF',
+  white: "#FFFFFF",
 };
 
 export default function HostProfile() {
@@ -76,8 +77,8 @@ export default function HostProfile() {
       type: "warning",
       buttons: [
         { text: "Cancel", style: "cancel" },
-        { text: "Log Out", onPress: logout }
-      ]
+        { text: "Log Out", onPress: logout },
+      ],
     });
   };
   // ============================================
@@ -86,17 +87,23 @@ export default function HostProfile() {
 
   const getKycStatusColor = () => {
     switch (kycStatus) {
-      case 'approved': return COLORS.emerald[500];
-      case 'pending': return COLORS.orange[500];
-      default: return COLORS.gray[500];
+      case "approved":
+        return COLORS.emerald[500];
+      case "pending":
+        return COLORS.orange[500];
+      default:
+        return COLORS.gray[500];
     }
   };
 
   const getKycStatusText = () => {
     switch (kycStatus) {
-      case 'approved': return 'Verified';
-      case 'pending': return 'Pending';
-      default: return 'Unverified';
+      case "approved":
+        return "Verified";
+      case "pending":
+        return "Pending";
+      default:
+        return "Unverified";
     }
   };
 
@@ -118,23 +125,36 @@ export default function HostProfile() {
               {/* Avatar */}
               <View style={styles.avatarSection}>
                 <View style={styles.avatarContainer}>
-                  <LinearGradient
-                    colors={[COLORS.gold[400], COLORS.gold[500]]}
-                    style={styles.avatarGradient}
-                  >
-                    <Text style={styles.avatarText}>
-                      {user?.fullName?.[0]?.toUpperCase() || 'H'}
-                    </Text>
-                  </LinearGradient>
-                  {kycStatus === 'approved' && (
+                  {user?.profilePicture ? (
+                    <Image
+                      source={{ uri: user.profilePicture }}
+                      style={styles.avatarImage}
+                    />
+                  ) : (
+                    <LinearGradient
+                      colors={[COLORS.gold[400], COLORS.gold[500]]}
+                      style={styles.avatarGradient}
+                    >
+                      <Text style={styles.avatarText}>
+                        {user?.fullName?.[0]?.toUpperCase() || "H"}
+                      </Text>
+                    </LinearGradient>
+                  )}
+                  {kycStatus === "approved" && (
                     <View style={styles.verifiedBadge}>
-                      <Ionicons name="checkmark-circle" size={28} color={COLORS.emerald[500]} />
+                      <Ionicons
+                        name="checkmark-circle"
+                        size={28}
+                        color={COLORS.emerald[500]}
+                      />
                     </View>
                   )}
                 </View>
 
-                <Text style={styles.name}>{user?.fullName || 'Host User'}</Text>
-                <Text style={styles.email}>{user?.email || 'email@example.com'}</Text>
+                <Text style={styles.name}>{user?.fullName || "Host User"}</Text>
+                <Text style={styles.email}>
+                  {user?.email || "email@example.com"}
+                </Text>
 
                 {/* Role Badge */}
                 <View style={styles.roleBadgeContainer}>
@@ -144,8 +164,14 @@ export default function HostProfile() {
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
                   >
-                    <MaterialCommunityIcons name="crown" size={14} color={COLORS.navy[900]} />
-                    <Text style={styles.roleBadgeText}>SUPERHOST</Text>
+                    <MaterialCommunityIcons
+                      name="crown"
+                      size={14}
+                      color={COLORS.navy[900]}
+                    />
+                    <Text style={styles.roleBadgeText}>
+                      {user?.role?.toUpperCase() || "HOST"}
+                    </Text>
                   </LinearGradient>
                 </View>
               </View>
@@ -160,20 +186,20 @@ export default function HostProfile() {
           <MenuItem
             icon="wallet-outline"
             label="Payout Settings"
-            gradient={[COLORS.blue[500], '#2563EB']}
-            onPress={() => { }}
+            gradient={[COLORS.blue[500], "#2563EB"]}
+            onPress={() => router.push("/common/payout-settings")}
           />
           <MenuItem
             icon="bar-chart-outline"
             label="Performance Analytics"
-            gradient={[COLORS.emerald[500], '#059669']}
-            onPress={() => { }}
+            gradient={[COLORS.emerald[500], "#059669"]}
+            onPress={() => router.push("/common/performance-analytics")}
           />
           <MenuItem
             icon="receipt-outline"
             label="Earnings Report"
-            gradient={[COLORS.purple[500], '#7C3AED']}
-            onPress={() => { }}
+            gradient={[COLORS.purple[500], "#7C3AED"]}
+            onPress={() => router.push("/common/earnings-report")}
           />
 
           {/* Security */}
@@ -183,20 +209,20 @@ export default function HostProfile() {
             label="Identity Verification"
             status={getKycStatusText()}
             statusColor={getKycStatusColor()}
-            gradient={[COLORS.purple[500], '#7C3AED']}
-            onPress={() => router.push('/kyc')}
+            gradient={[COLORS.purple[500], "#7C3AED"]}
+            onPress={() => router.push("/kyc")}
           />
           <MenuItem
             icon="lock-closed-outline"
             label="Change Password"
-            gradient={[COLORS.orange[500], '#EA580C']}
-            onPress={() => { }}
+            gradient={[COLORS.orange[500], "#EA580C"]}
+            onPress={() => router.push("/common/change-password")}
           />
           <MenuItem
-            icon="finger-print-outline"
-            label="Privacy Settings"
-            gradient={[COLORS.blue[500], '#2563EB']}
-            onPress={() => { }}
+            icon="person-circle-outline"
+            label="Personal Details"
+            gradient={[COLORS.blue[500], "#2563EB"]}
+            onPress={() => router.push("/common/edit-profile")}
           />
 
           {/* Support */}
@@ -204,20 +230,20 @@ export default function HostProfile() {
           <MenuItem
             icon="chatbubbles-outline"
             label="Help Center"
-            gradient={[COLORS.emerald[500], '#059669']}
-            onPress={() => { }}
+            gradient={[COLORS.emerald[500], "#059669"]}
+            onPress={() => router.push("/common/help-center")}
           />
           <MenuItem
             icon="document-text-outline"
             label="Terms & Conditions"
-            gradient={[COLORS.gray[500], '#4B5563']}
-            onPress={() => { }}
+            gradient={[COLORS.gray[500], "#4B5563"]}
+            onPress={() => router.push("/common/terms")}
           />
           <MenuItem
             icon="information-circle-outline"
             label="About App"
-            gradient={[COLORS.blue[500], '#2563EB']}
-            onPress={() => { }}
+            gradient={[COLORS.blue[500], "#2563EB"]}
+            onPress={() => router.push("/common/about")}
           />
         </View>
 
@@ -228,7 +254,11 @@ export default function HostProfile() {
           activeOpacity={0.8}
         >
           <View style={styles.logoutBtnInner}>
-            <Ionicons name="log-out-outline" size={22} color={COLORS.red[500]} />
+            <Ionicons
+              name="log-out-outline"
+              size={22}
+              color={COLORS.red[500]}
+            />
             <Text style={styles.logoutText}>Log Out</Text>
           </View>
         </TouchableOpacity>
@@ -245,7 +275,11 @@ export default function HostProfile() {
 // ============================================
 function MenuItem({ icon, label, status, statusColor, gradient, onPress }) {
   return (
-    <TouchableOpacity style={styles.menuItem} onPress={onPress} activeOpacity={0.7}>
+    <TouchableOpacity
+      style={styles.menuItem}
+      onPress={onPress}
+      activeOpacity={0.7}
+    >
       <View style={styles.menuLeft}>
         <View style={styles.iconBoxContainer}>
           <LinearGradient
@@ -262,7 +296,12 @@ function MenuItem({ icon, label, status, statusColor, gradient, onPress }) {
 
       <View style={styles.menuRight}>
         {status && (
-          <View style={[styles.statusBadge, { backgroundColor: statusColor + '20' }]}>
+          <View
+            style={[
+              styles.statusBadge,
+              { backgroundColor: statusColor + "20" },
+            ]}
+          >
             <Text style={[styles.statusText, { color: statusColor }]}>
               {status}
             </Text>
@@ -293,18 +332,18 @@ const styles = StyleSheet.create({
     paddingTop: 20,
   },
   avatarSection: {
-    alignItems: 'center',
+    alignItems: "center",
   },
   avatarContainer: {
-    position: 'relative',
+    position: "relative",
     marginBottom: 16,
   },
   avatarGradient: {
     width: 110,
     height: 110,
     borderRadius: 28,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     shadowColor: COLORS.gold[500],
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.4,
@@ -313,11 +352,17 @@ const styles = StyleSheet.create({
   },
   avatarText: {
     fontSize: 48,
-    fontWeight: '800',
+    fontWeight: "800",
     color: COLORS.navy[900],
   },
+  avatarImage: {
+    width: 110,
+    height: 110,
+    borderRadius: 28,
+    borderWidth: 0,
+  },
   verifiedBadge: {
-    position: 'absolute',
+    position: "absolute",
     bottom: -4,
     right: -4,
     backgroundColor: COLORS.navy[900],
@@ -329,7 +374,7 @@ const styles = StyleSheet.create({
 
   name: {
     fontSize: 26,
-    fontWeight: '800',
+    fontWeight: "800",
     color: COLORS.white,
     marginBottom: 4,
   },
@@ -341,7 +386,7 @@ const styles = StyleSheet.create({
 
   roleBadgeContainer: {
     borderRadius: 20,
-    overflow: 'hidden',
+    overflow: "hidden",
     shadowColor: COLORS.gold[500],
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
@@ -349,8 +394,8 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   roleBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 6,
     paddingHorizontal: 16,
     paddingVertical: 6,
@@ -358,7 +403,7 @@ const styles = StyleSheet.create({
   roleBadgeText: {
     color: COLORS.navy[900],
     fontSize: 12,
-    fontWeight: '800',
+    fontWeight: "800",
     letterSpacing: 1,
   },
 
@@ -369,17 +414,17 @@ const styles = StyleSheet.create({
   },
   menuHeader: {
     fontSize: 13,
-    fontWeight: '700',
+    fontWeight: "700",
     color: COLORS.gray[500],
     marginBottom: 12,
     marginTop: 28,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
     letterSpacing: 1,
   },
   menuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingVertical: 14,
     paddingHorizontal: 16,
     backgroundColor: COLORS.navy[800],
@@ -389,30 +434,30 @@ const styles = StyleSheet.create({
     borderColor: COLORS.navy[700],
   },
   menuLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     flex: 1,
   },
   iconBoxContainer: {
     marginRight: 14,
     borderRadius: 12,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   iconBox: {
     width: 44,
     height: 44,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   menuLabel: {
     fontSize: 15,
     color: COLORS.white,
-    fontWeight: '600',
+    fontWeight: "600",
     flex: 1,
   },
   menuRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 10,
   },
 
@@ -423,8 +468,8 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 11,
-    fontWeight: '700',
-    textTransform: 'capitalize',
+    fontWeight: "700",
+    textTransform: "capitalize",
   },
 
   // Logout Button
@@ -432,30 +477,30 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     marginTop: 28,
     borderRadius: 14,
-    overflow: 'hidden',
+    overflow: "hidden",
     backgroundColor: COLORS.navy[800],
     borderWidth: 1,
-    borderColor: COLORS.red[500] + '40',
+    borderColor: COLORS.red[500] + "40",
   },
   logoutBtnInner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     gap: 10,
     paddingVertical: 16,
   },
   logoutText: {
     color: COLORS.red[500],
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: "700",
   },
 
   // Version
   versionText: {
-    textAlign: 'center',
+    textAlign: "center",
     color: COLORS.gray[500],
     fontSize: 12,
     marginTop: 24,
-    fontWeight: '500',
+    fontWeight: "500",
   },
 });
