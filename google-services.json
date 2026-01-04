@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "400619671340",
+    "project_id": "swift-ride-4f080",
+    "storage_bucket": "swift-ride-4f080.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:400619671340:android:7f23512092fb4ace43a689",
+        "android_client_info": {
+          "package_name": "com.swiftride.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "400619671340-lp43q56t80c4i2e8fk9nsgo0s0d1nae6.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.swiftride.app",
+            "certificate_hash": "d471c83a01003d3bb599021ff8dae67a31bf8538"
+          }
+        },
+        {
+          "client_id": "400619671340-uuqitvb65e5leithjfi01vjllvn30e7s.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.swiftride.app",
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+          }
+        },
+        {
+          "client_id": "400619671340-ndjjdcr3fs8bsalutjb9ldqs1egma49v.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBbT7tpItLmLtmz_Af0bWvoGasMTJwnld4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "400619671340-ndjjdcr3fs8bsalutjb9ldqs1egma49v.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
