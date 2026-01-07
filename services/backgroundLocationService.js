@@ -5,11 +5,10 @@ import * as Location from 'expo-location';
 import * as TaskManager from 'expo-task-manager';
 import * as SecureStore from 'expo-secure-store';
 import axios from 'axios';
+import Config from '../constants/Config';
 
 const BACKGROUND_LOCATION_TASK = 'background-location-tracking';
-const API_BASE = process.env.EXPO_PUBLIC_SERVER_IP
-    ? `http://${process.env.EXPO_PUBLIC_SERVER_IP}:${process.env.EXPO_PUBLIC_SERVER_PORT || 5000}/api`
-    : 'http://localhost:5000/api';
+const API_BASE = Config.API_URL.replace('/api', '') + '/api'; // Use centralized config
 
 // Store the current booking ID for background task
 let currentBookingId = null;

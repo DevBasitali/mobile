@@ -6,7 +6,14 @@
   "build": {
     "development": {
       "developmentClient": true,
-      "distribution": "internal"
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "http://34.47.183.227:5000/api",
+        "EXPO_PUBLIC_SERVER_IP": "34.47.183.227",
+        "EXPO_PUBLIC_SERVER_PORT": "5000",
+        "EXPO_PUBLIC_LOCATION_INTERVAL_MS": "1000",
+        "EXPO_PUBLIC_GOOGLE_MAPS_API_KEY": "AIzaSyCaEPPHig-6whefFn6_wSLffBIMReWs5gg"
+      }
     },
     "preview": {
       "distribution": "internal",
@@ -15,11 +22,21 @@
       },
       "env": {
         "EXPO_PUBLIC_API_URL": "http://34.47.183.227:5000/api",
+        "EXPO_PUBLIC_SERVER_IP": "34.47.183.227",
+        "EXPO_PUBLIC_SERVER_PORT": "5000",
+        "EXPO_PUBLIC_LOCATION_INTERVAL_MS": "1000",
         "EXPO_PUBLIC_GOOGLE_MAPS_API_KEY": "AIzaSyCaEPPHig-6whefFn6_wSLffBIMReWs5gg"
       }
     },
     "production": {
-      "autoIncrement": true
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_API_URL": "http://34.47.183.227:5000/api",
+        "EXPO_PUBLIC_SERVER_IP": "34.47.183.227",
+        "EXPO_PUBLIC_SERVER_PORT": "5000",
+        "EXPO_PUBLIC_LOCATION_INTERVAL_MS": "1000",
+        "EXPO_PUBLIC_GOOGLE_MAPS_API_KEY": "AIzaSyCaEPPHig-6whefFn6_wSLffBIMReWs5gg"
+      }
     }
   },
   "submit": {
