@@ -21,6 +21,7 @@ import { Stack, router, useLocalSearchParams } from "expo-router";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import SuccessModal from "../../components/common/SuccessModal";
+import UploadProgressModal from "../../components/common/UploadProgressModal";
 
 const { width } = Dimensions.get("window");
 
@@ -431,6 +432,12 @@ export default function KycScreen() {
           setShowSuccess(false);
           redirectByRole(user?.role || urlRole);
         }}
+      />
+
+      {/* Upload Progress Modal */}
+      <UploadProgressModal
+        visible={uploading}
+        message="Please wait while we securely upload your documents to our servers..."
       />
 
       <Stack.Screen

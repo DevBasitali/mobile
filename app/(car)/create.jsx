@@ -17,6 +17,7 @@ import * as ImagePicker from "expo-image-picker";
 import { FontAwesome } from "@expo/vector-icons";
 import carService from "../../services/carService"; // Needs 3 levels up
 import { useAlert } from "../../context/AlertContext";
+import UploadProgressModal from "../../components/common/UploadProgressModal";
 
 export default function CreateCar() {
   const [loading, setLoading] = useState(false);
@@ -163,6 +164,12 @@ export default function CreateCar() {
     >
       <Stack.Screen
         options={{ title: "List Your Car", headerBackTitle: "Cancel" }}
+      />
+
+      {/* Upload Progress Modal */}
+      <UploadProgressModal
+        visible={loading}
+        message="Uploading your car photos and details...\nThis may take a moment."
       />
 
       <ScrollView
