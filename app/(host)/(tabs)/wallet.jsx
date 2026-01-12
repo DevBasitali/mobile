@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, StatusBar, RefreshControl, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, StatusBar, RefreshControl } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { getWallet, getTransactions, requestWithdrawal } from '../../../services/walletService';
 import WithdrawalModal from '../../../components/WithdrawalModal';
+import { useAlert } from '../../../context/AlertContext';
 
 // 🎨 Swift Ride Premium Theme
 const COLORS = {
@@ -20,6 +21,7 @@ const COLORS = {
 };
 
 export default function HostWallet() {
+  const { showAlert } = useAlert();
   const [balanceVisible, setBalanceVisible] = useState(true);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -72,13 +74,18 @@ export default function HostWallet() {
       setWithdrawLoading(true);
       await requestWithdrawal(amount, bankDetails);
       setShowWithdrawModal(false);
-      Alert.alert(
-        'Request Submitted',
-        'Your withdrawal request has been submitted and is pending admin approval.',
-        [{ text: 'OK', onPress: () => fetchWalletData() }]
-      );
+      showAlert({
+        title: 'Request Submitted',
+        message: 'Your withdrawal request has been submitted and is pending admin approval.',
+        type: 'success',
+        buttons: [{ text: 'OK', onPress: () => fetchWalletData() }]
+      });
     } catch (err) {
-      Alert.alert('Error', err.response?.data?.message || err.message || 'Failed to submit withdrawal request');
+      showAlert({
+        title: 'Error',
+        message: err.response?.data?.message || err.message || 'Failed to submit withdrawal request',
+        type: 'error',
+      });
     } finally {
       setWithdrawLoading(false);
     }

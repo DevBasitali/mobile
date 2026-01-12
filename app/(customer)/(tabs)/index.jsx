@@ -22,6 +22,7 @@ import { router, useFocusEffect } from "expo-router";
 import MapView, { Marker, PROVIDER_GOOGLE, Callout } from "react-native-maps";
 import * as Location from "expo-location";
 import carService from "../../../services/carService";
+import FloatingChatButton from "../../../components/FloatingChatButton";
 
 const { width, height } = Dimensions.get("window");
 
@@ -746,6 +747,9 @@ export default function CustomerHome() {
           </View>
         )}
       </View>
+
+      {/* Floating AI Chat Button */}
+      <FloatingChatButton />
     </View>
   );
 }

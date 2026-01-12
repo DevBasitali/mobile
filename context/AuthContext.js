@@ -29,11 +29,12 @@ export const AuthProvider = ({ children }) => {
   // Handles Token Saving + Header Setting + Redirects
   const finalizeAuth = async (token, userData, skipKycCheck = false) => {
     try {
-      // 1. Set Header via Service (Fixes "Session Expired")
+      // 1. Set Header via Service
       authService.setToken(token);
 
-      // 2. Save Token to Storage
+      // 2. Save Token AND User to Storage (Stale-While-Revalidate pattern)
       await SecureStore.setItemAsync("accessToken", token);
+      await SecureStore.setItemAsync("userSession", JSON.stringify(userData));
 
       // 3. Update User State
       setUser(userData);
@@ -42,7 +43,6 @@ export const AuthProvider = ({ children }) => {
       const kycStat = await refreshKycStatus();
 
       // 5. Check if user needs KYC verification (for new users)
-      // If KYC is missing and skipKycCheck is false, redirect to KYC screen
       if (!skipKycCheck && (kycStat === "missing" || kycStat === undefined)) {
         console.log("New user detected, redirecting to KYC with role:", userData.role);
         router.replace(`/kyc?role=${userData.role}`);
@@ -57,20 +57,58 @@ export const AuthProvider = ({ children }) => {
 
   const checkUserLoggedIn = async () => {
     try {
-      const token = await SecureStore.getItemAsync("accessToken");
+      // 1. Load Token AND Cached User
+      const [token, cachedUserJson] = await Promise.all([
+        SecureStore.getItemAsync("accessToken"),
+        SecureStore.getItemAsync("userSession")
+      ]);
+
       if (token) {
-        // ✅ Set header immediately on app launch
+        // ✅ Set header immediately
         authService.setToken(token);
 
-        const userRes = await authService.getCurrentUser();
-        setUser(userRes.data.user);
-        await refreshKycStatus();
+        // ✅ OPTIMISTIC UPDATE: If we have cached user, set it immediately
+        // This prevents "flicker" and redirects to dashboard instantly
+        if (cachedUserJson) {
+          try {
+            const cachedUser = JSON.parse(cachedUserJson);
+            setUser(cachedUser);
+            // We can decide to stop loading here or wait for verification
+            // Let's keep isLoading true for a split second or just set it false to show UI
+            // But for safety, let's verify in background
+          } catch (e) {
+            console.log("Failed to parse cached user");
+          }
+        }
+
+        // 2. Verify with Server (Background / Revalidate)
+        try {
+          const userRes = await authService.getCurrentUser();
+          // Correctly extract user data: api returns { data: user } or { data: { user } }
+          const freshUser = userRes.data?.user || userRes.data;
+
+          if (freshUser) {
+            setUser(freshUser);
+            await SecureStore.setItemAsync("userSession", JSON.stringify(freshUser)); // Update cache
+            await refreshKycStatus();
+          }
+        } catch (apiError) {
+          console.log("Session verification failed:", apiError.message);
+
+          // CRITICAL: Only logout on 401 (Unauthorized)
+          // If network error, KEEP the user logged in (Offline Mode)
+          if (apiError.response?.status === 401) {
+            console.log("Token expired or invalid. Logging out.");
+            await logout(true); // silent logout
+            return;
+          } else {
+            console.log("Network error or server issue. Keeping cached session.");
+          }
+        }
       }
     } catch (error) {
-      console.log("Session check failed:", error);
+      console.log("Session check critical error:", error);
       setUser(null);
-      // Optional: Clear token if session check fails
-      authService.setToken(null);
     } finally {
       setIsLoading(false);
     }
@@ -204,15 +242,16 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const logout = async () => {
-    setIsLoading(true);
+  const logout = async (silent = false) => {
+    if (!silent) setIsLoading(true);
     try {
       await authService.logout();
     } catch (error) {
       console.log("Server logout failed, forcing local logout");
     } finally {
       await SecureStore.deleteItemAsync("accessToken");
-      authService.setToken(null); // ✅ Clear header safely
+      await SecureStore.deleteItemAsync("userSession"); // ✅ Clear cached user
+      authService.setToken(null);
       setUser(null);
       setKycStatus(null);
       router.replace("/(auth)/login");

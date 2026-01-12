@@ -18,6 +18,7 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useAuth } from "../../../context/AuthContext";
 import api from "../../../services/api"; // Unified Analytics API
 import Animated, { FadeInDown } from "react-native-reanimated";
+import FloatingChatButton from "../../../components/FloatingChatButton";
 
 const { width } = Dimensions.get("window");
 
@@ -316,6 +317,9 @@ export default function HostDashboard() {
           {/* Activity Section can replace the old activity feed or just show a simplified version */}
         </ScrollView>
       </SafeAreaView>
+
+      {/* Floating AI Chat Button */}
+      <FloatingChatButton />
     </View>
   );
 }
