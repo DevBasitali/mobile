@@ -109,13 +109,17 @@ const CustomAlert = ({
           <Text style={styles.message}>{message}</Text>
 
           {/* Action Buttons */}
-          <View style={styles.buttonRow}>
+          <View style={[
+            styles.buttonRow,
+            actionButtons.length > 2 && styles.buttonColumn
+          ]}>
             {actionButtons.map((btn, index) => (
               <TouchableOpacity
                 key={index}
                 style={[
                   styles.btn,
-                  actionButtons.length > 1 && styles.btnFlex,
+                  actionButtons.length === 2 && styles.btnFlex,
+                  actionButtons.length > 2 && styles.btnFullWidth,
                   btn.style === "cancel" ? styles.btnCancel : styles.btnPrimary,
                 ]}
                 onPress={() => {
@@ -211,6 +215,10 @@ const styles = StyleSheet.create({
     width: "100%",
     justifyContent: "center",
   },
+  buttonColumn: {
+    flexDirection: "column",
+    gap: 10,
+  },
   btn: {
     borderRadius: 12,
     overflow: "hidden",
@@ -218,6 +226,9 @@ const styles = StyleSheet.create({
   },
   btnFlex: {
     flex: 1,
+  },
+  btnFullWidth: {
+    width: "100%",
   },
   btnPrimary: {
     shadowColor: "#000",

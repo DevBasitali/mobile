@@ -48,8 +48,8 @@ export default function EarningsReport() {
     try {
       setLoading(true);
       const [walletRes, transactionsRes] = await Promise.all([
-        api.get("/wallet/me"),
-        api.get("/wallet/me/transactions"),
+        api.get("/wallets/me"),
+        api.get("/wallets/me/transactions"),
       ]);
 
       setWallet(walletRes.data.data);

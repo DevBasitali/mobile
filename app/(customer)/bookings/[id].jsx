@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   Image,
   StatusBar,
+  Linking,
 } from "react-native";
 import { useLocalSearchParams, router, Stack } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
@@ -20,6 +21,7 @@ import carService from "../../../services/carService";
 import api from "../../../services/api";
 import { useLocationTracking } from "../../../hooks/useLocationTracking";
 import QRCodeDisplay from "../../../components/QRCodeDisplay";
+import ReviewModal from "../../../components/ReviewModal";
 import { useAlert } from "../../../context/AlertContext";
 
 // Premium Theme
@@ -42,6 +44,8 @@ export default function CustomerBookingDetail() {
   const [loading, setLoading] = useState(true);
   const [downloading, setDownloading] = useState(false);
   const [showQR, setShowQR] = useState(false);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [hasReviewed, setHasReviewed] = useState(false);
   const { showAlert } = useAlert();
 
   // Location tracking - only active when booking is ongoing
@@ -68,6 +72,22 @@ export default function CustomerBookingDetail() {
 
       const bookingData = response.data?.booking || response.booking;
       setBooking(bookingData);
+
+      // Check if this booking already has a review (only for completed bookings)
+      if (bookingData?.status === "completed") {
+        try {
+          const reviewsRes = await api.get(`/reviews/car/${bookingData.car?._id || bookingData.car}`);
+          const reviews = reviewsRes.data?.reviews || [];
+          // Check if current user has already reviewed this specific booking
+          const existingReview = reviews.find(r => r.booking === id || r.booking?._id === id);
+          if (existingReview) {
+            setHasReviewed(true);
+          }
+        } catch (e) {
+          // Silently ignore - just show the review button
+          console.log("Could not check existing reviews");
+        }
+      }
     } catch (error) {
       console.error("Error fetching booking:", error);
       showAlert({
@@ -134,10 +154,12 @@ export default function CustomerBookingDetail() {
       return;
     }
 
-    // Use the direct PDF URL from booking data
+    // Use the direct PDF URL from booking data (Cloudinary URL)
+    // Or fallback to API endpoint
     const pdfUrl = booking.invoicePdfPath;
+    const apiEndpoint = booking.invoiceDownloadPath;
 
-    if (!pdfUrl) {
+    if (!pdfUrl && !apiEndpoint) {
       showAlert({
         title: "Invoice Not Available",
         message: "Invoice PDF has not been generated yet.",
@@ -145,6 +167,9 @@ export default function CustomerBookingDetail() {
       });
       return;
     }
+
+    // Determine which URL to use
+    const urlToOpen = pdfUrl || `${api.defaults.baseURL}${apiEndpoint}`;
 
     showAlert({
       title: "Download Invoice",
@@ -156,22 +181,19 @@ export default function CustomerBookingDetail() {
           text: "Open",
           onPress: async () => {
             try {
-              // Open PDF directly in browser - most reliable way
-              const canOpen = await Linking.canOpenURL(pdfUrl);
+              // Open PDF in browser
+              const canOpen = await Linking.canOpenURL(urlToOpen);
               if (canOpen) {
-                await Linking.openURL(pdfUrl);
+                await Linking.openURL(urlToOpen);
               } else {
-                showAlert({
-                  title: "Error",
-                  message: "Cannot open PDF URL",
-                  type: "error",
-                });
+                // Fallback - try opening without canOpenURL check
+                await Linking.openURL(urlToOpen);
               }
             } catch (error) {
               console.error("Open PDF error:", error);
               showAlert({
                 title: "Error",
-                message: "Could not open invoice",
+                message: "Could not open invoice. Please try again.",
                 type: "error",
               });
             }
@@ -433,7 +455,7 @@ export default function CustomerBookingDetail() {
             style={styles.actionBtn}
             onPress={handleContactHost}
           >
-            <Ionicons name="chatbubble" size={20} color={COLORS.blue[500]} />
+            <Ionicons name="call" size={20} color={COLORS.blue[500]} />
             <Text style={styles.actionText}>Contact Host</Text>
           </TouchableOpacity>
 
@@ -453,6 +475,22 @@ export default function CustomerBookingDetail() {
                 </Text>
               </TouchableOpacity>
             )}
+
+          {/* Leave Review Button - Show for completed bookings */}
+          {booking.status === "completed" && !hasReviewed && (
+            <TouchableOpacity
+              style={[
+                styles.actionBtn,
+                { backgroundColor: COLORS.green[500] + "20" },
+              ]}
+              onPress={() => setShowReviewModal(true)}
+            >
+              <Ionicons name="star" size={20} color={COLORS.green[500]} />
+              <Text style={[styles.actionText, { color: COLORS.green[500] }]}>
+                Leave Review
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* Info Note for Pending */}
@@ -477,6 +515,21 @@ export default function CustomerBookingDetail() {
         onClose={() => setShowQR(false)}
         qrValue={booking?.handoverSecret}
         title="Handover QR Code"
+      />
+
+      {/* Review Modal */}
+      <ReviewModal
+        visible={showReviewModal}
+        onClose={() => setShowReviewModal(false)}
+        bookingId={booking?._id || booking?.id}
+        onSuccess={() => {
+          setHasReviewed(true);
+          showAlert({
+            title: "Thank You!",
+            message: "Your review has been submitted successfully.",
+            type: "success",
+          });
+        }}
       />
     </View>
   );

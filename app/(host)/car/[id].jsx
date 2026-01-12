@@ -237,7 +237,13 @@ export default function HostCarDetails() {
                 {car.model} {car.year}
               </Text>
             </View>
-            <View style={styles.ratingBox}>
+            <TouchableOpacity 
+              style={styles.ratingBox}
+              onPress={() => router.push({
+                pathname: "/(host)/car/reviews",
+                params: { carId: id, carName: `${car.make} ${car.model}` }
+              })}
+            >
               <LinearGradient
                 colors={[COLORS.gold[500], COLORS.gold[600]]}
                 style={styles.ratingGradient}
@@ -245,9 +251,10 @@ export default function HostCarDetails() {
                 end={{ x: 1, y: 0 }}
               >
                 <Ionicons name="star" size={14} color={COLORS.navy[900]} />
-                <Text style={styles.ratingText}>4.9</Text>
+                <Text style={styles.ratingText}>Reviews</Text>
+                <Ionicons name="chevron-forward" size={14} color={COLORS.navy[900]} />
               </LinearGradient>
-            </View>
+            </TouchableOpacity>
           </View>
 
           {/* Plate Number */}

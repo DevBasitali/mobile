@@ -228,7 +228,13 @@ export default function HostProfile() {
           {/* Support */}
           <Text style={styles.menuHeader}>Support & Legal</Text>
           <MenuItem
-            icon="chatbubbles-outline"
+            icon="sparkles-outline"
+            label="AI Assistant"
+            gradient={[COLORS.gold[500], "#D97706"]}
+            onPress={() => router.push("/common/ai-chat")}
+          />
+          <MenuItem
+            icon="help-circle-outline"
             label="Help Center"
             gradient={[COLORS.emerald[500], "#059669"]}
             onPress={() => router.push("/common/help-center")}

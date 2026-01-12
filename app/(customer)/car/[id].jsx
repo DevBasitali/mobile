@@ -20,6 +20,7 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import carService from "../../../services/carService";
 import bookingService from "../../../services/bookingService";
+import { getCarReviews } from "../../../services/reviewService";
 import { useAuth } from "../../../context/AuthContext";
 import { useAlert } from "../../../context/AlertContext";
 
@@ -43,6 +44,7 @@ export default function CustomerCarDetails() {
   const [loading, setLoading] = useState(true);
   const [activeSlide, setActiveSlide] = useState(0);
   const [existingBooking, setExistingBooking] = useState(null); // Track if user has active booking
+  const [carRating, setCarRating] = useState({ average: 0, count: 0 });
 
   useEffect(() => {
     fetchCarDetails();
@@ -53,6 +55,17 @@ export default function CustomerCarDetails() {
       const response = await carService.getCarById(id);
       const carData = response.data?.car || response.car;
       setCar(carData);
+
+      // Fetch car reviews/rating
+      try {
+        const reviewsRes = await getCarReviews(carData._id);
+        setCarRating({
+          average: Number(reviewsRes.data?.averageRating || reviewsRes.averageRating || 0),
+          count: reviewsRes.data?.totalReviews || reviewsRes.totalReviews || 0,
+        });
+      } catch (e) {
+        console.log("Could not fetch car reviews");
+      }
 
       // Check if user has an active booking for this car
       if (user) {
@@ -206,10 +219,21 @@ export default function CustomerCarDetails() {
                 {car.model} {car.year}
               </Text>
             </View>
-            <View style={styles.ratingBox}>
+            <TouchableOpacity 
+              style={styles.ratingBox}
+              onPress={() => router.push({
+                pathname: "/common/car-reviews",
+                params: { carId: id, carName: `${car.make} ${car.model}` }
+              })}
+            >
               <FontAwesome name="star" size={14} color={COLORS.gold[500]} />
-              <Text style={styles.ratingText}>5.0</Text>
-            </View>
+              <Text style={styles.ratingText}>
+                {carRating.average > 0 ? carRating.average.toFixed(1) : "New"}
+              </Text>
+              {carRating.count > 0 && (
+                <Text style={styles.ratingCount}>({carRating.count})</Text>
+              )}
+            </TouchableOpacity>
           </View>
 
           {/* Location */}
@@ -472,6 +496,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   ratingText: { fontSize: 13, fontWeight: "700", color: COLORS.white },
+  ratingCount: { fontSize: 11, color: COLORS.gray[400], marginLeft: 2 },
 
   locationRow: {
     flexDirection: "row",

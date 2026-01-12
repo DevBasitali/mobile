@@ -121,6 +121,11 @@ export default function CustomerProfile() {
 
           <Text style={styles.sectionTitle}>Support</Text>
           <MenuItem
+            icon="sparkles-outline"
+            label="AI Assistant"
+            onPress={() => router.push("/common/ai-chat")}
+          />
+          <MenuItem
             icon="help-circle-outline"
             label="Help Center"
             onPress={() => router.push("/common/help-center")}

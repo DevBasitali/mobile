@@ -45,7 +45,7 @@ const FAQS = [
   {
     question: "How do I contact the host?",
     answer:
-      "Once your booking is confirmed, you will be able to chat with the host directly through the app to coordinate pickup and drop-off.",
+      "Once your booking is confirmed, you can coordinate pickup and drop-off details with the host using the contact information provided in your booking details.",
   },
   {
     question: "Can I cancel my booking?",

@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, StatusBar, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, StatusBar, RefreshControl, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { getWallet, getTransactions } from '../../../services/walletService';
+import { getWallet, getTransactions, requestWithdrawal } from '../../../services/walletService';
+import WithdrawalModal from '../../../components/WithdrawalModal';
 
 // 🎨 Swift Ride Premium Theme
 const COLORS = {
@@ -24,7 +25,10 @@ export default function HostWallet() {
   const [refreshing, setRefreshing] = useState(false);
   const [wallet, setWallet] = useState(null);
   const [transactions, setTransactions] = useState([]);
+  const [withdrawalRequests, setWithdrawalRequests] = useState([]);
   const [error, setError] = useState(null);
+  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+  const [withdrawLoading, setWithdrawLoading] = useState(false);
 
   const fetchWalletData = async () => {
     try {
@@ -34,12 +38,16 @@ export default function HostWallet() {
         getTransactions(20)
       ]);
 
-      // Handle wallet response
-      const walletData = walletRes?.data || walletRes;
+      // Handle wallet response - backend now returns wallet, transactions, and withdrawalRequests
+      const walletData = walletRes?.data?.wallet || walletRes?.wallet || walletRes?.data || walletRes;
       setWallet(walletData);
 
-      // Handle transactions response
-      const txData = txRes?.data?.items || txRes?.items || [];
+      // Handle transactions from wallet response or separate call
+      const txData = walletRes?.data?.transactions || walletRes?.transactions || txRes?.data?.items || txRes?.items || [];
+
+      // Handle withdrawal requests from wallet response
+      const withdrawals = walletRes?.data?.withdrawalRequests || walletRes?.withdrawalRequests || [];
+      setWithdrawalRequests(withdrawals);
       setTransactions(txData);
     } catch (err) {
       console.log('Wallet fetch error:', err.message);
@@ -58,6 +66,23 @@ export default function HostWallet() {
     setRefreshing(true);
     fetchWalletData();
   }, []);
+
+  const handleWithdraw = async ({ amount, bankDetails }) => {
+    try {
+      setWithdrawLoading(true);
+      await requestWithdrawal(amount, bankDetails);
+      setShowWithdrawModal(false);
+      Alert.alert(
+        'Request Submitted',
+        'Your withdrawal request has been submitted and is pending admin approval.',
+        [{ text: 'OK', onPress: () => fetchWalletData() }]
+      );
+    } catch (err) {
+      Alert.alert('Error', err.response?.data?.message || err.message || 'Failed to submit withdrawal request');
+    } finally {
+      setWithdrawLoading(false);
+    }
+  };
 
   const formatAmount = (amount) => {
     if (!amount && amount !== 0) return 'PKR 0.00';
@@ -159,7 +184,7 @@ export default function HostWallet() {
 
         {/* ⚡ QUICK ACTIONS */}
         <View style={styles.actionsContainer}>
-          <ActionButton icon="arrow-down-circle-outline" label="Withdraw" />
+          <ActionButton icon="arrow-down-circle-outline" label="Withdraw" onPress={() => setShowWithdrawModal(true)} />
           <ActionButton icon="document-text-outline" label="Statement" />
           <ActionButton icon="card-outline" label="Cards" />
           <ActionButton icon="settings-outline" label="Settings" />
@@ -221,13 +246,22 @@ export default function HostWallet() {
         )}
 
       </ScrollView>
+
+      {/* Withdrawal Modal */}
+      <WithdrawalModal
+        visible={showWithdrawModal}
+        onClose={() => setShowWithdrawModal(false)}
+        onSubmit={handleWithdraw}
+        maxAmount={wallet?.balanceAvailable || 0}
+        loading={withdrawLoading}
+      />
     </SafeAreaView>
   );
 }
 
 // Helper Component for Buttons
-const ActionButton = ({ icon, label }) => (
-  <TouchableOpacity style={styles.actionBtn}>
+const ActionButton = ({ icon, label, onPress }) => (
+  <TouchableOpacity style={styles.actionBtn} onPress={onPress}>
     <View style={styles.actionIconBox}>
       <Ionicons name={icon} size={24} color={COLORS.gold} />
     </View>
