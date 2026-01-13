@@ -42,12 +42,14 @@ const GoogleLoginBtn = ({ role }) => { // Removed default
 
       const userInfo = await GoogleSignin.signIn();
       const idToken = userInfo.data?.idToken;
+      
+      const { accessToken } = await GoogleSignin.getTokens();
 
       if (idToken) {
         console.log(`Authenticating with role: ${role || "none"}...`);
 
         try {
-          const response = await googleLoginRequest(idToken, role);
+          const response = await googleLoginRequest(idToken, role, accessToken);
           const data = response.data || response;
 
           if (data.requiresSignup) {

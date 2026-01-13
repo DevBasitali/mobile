@@ -1,8 +1,8 @@
 import api from "./api";
 
 // 1. Define the Google Login function separately
-export const googleLoginRequest = async (idToken, role) => {
-  const response = await api.post("/auth/google-login", { idToken, role, platform: 'mobile' });
+export const googleLoginRequest = async (idToken, role, accessToken) => {
+  const response = await api.post("/auth/google-login", { idToken, role, accessToken, platform: 'mobile' });
   return response.data;
 };
 
