@@ -13,7 +13,7 @@ import {
 import { Stack, router } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
-import api from "../../services/api";
+import { getWallet, getTransactions } from "../../services/walletService";
 import { useAlert } from "../../context/AlertContext";
 
 const COLORS = {
@@ -48,12 +48,17 @@ export default function EarningsReport() {
     try {
       setLoading(true);
       const [walletRes, transactionsRes] = await Promise.all([
-        api.get("/wallets/me"),
-        api.get("/wallets/me/transactions"),
+        getWallet(),
+        getTransactions(20),
       ]);
 
-      setWallet(walletRes.data.data);
-      setTransactions(transactionsRes.data.data.items || []);
+      // Robust extraction matching wallet.jsx logic
+      const walletData = walletRes?.data?.wallet || walletRes?.wallet || walletRes?.data || walletRes;
+      
+      const txData = walletRes?.data?.transactions || walletRes?.transactions || transactionsRes?.data?.items || transactionsRes?.items || [];
+
+      setWallet(walletData);
+      setTransactions(txData);
     } catch (error) {
       console.error("Error fetching earnings data:", error);
       showAlert({
@@ -172,7 +177,7 @@ export default function EarningsReport() {
             ) : (
               <View style={styles.transactionsList}>
                 {transactions.map((tx) => (
-                  <View key={tx.id} style={styles.transactionItem}>
+                  <View key={tx._id || tx.id} style={styles.transactionItem}>
                     <View style={styles.txLeft}>
                       <View style={styles.txIconBox}>
                         <Ionicons

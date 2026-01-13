@@ -1,51 +1,29 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Dimensions, Image } from 'react-native';
+import React, { useEffect } from 'react';
+import { View, Text, StyleSheet, Dimensions, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as SecureStore from 'expo-secure-store';
 import { LinearGradient } from 'expo-linear-gradient';
-import Animated, { 
-  useSharedValue, 
-  useAnimatedStyle, 
-  withSpring, 
-  withTiming, 
-  withSequence,
-  withDelay,
-  FadeInDown,
-  ZoomIn
-} from 'react-native-reanimated';
+import Animated, { FadeIn, FadeInDown, FadeInUp } from 'react-native-reanimated';
 
-const { width } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
 
-// 🎨 Premium Theme
+// 🎨 App Theme Colors (Matching the rest of the app)
 const COLORS = {
-  navyDark: '#050B14',
-  navyLight: '#0F2137',
+  background: '#0A1628',
+  cardDark: '#0F2137',
   gold: '#F59E0B',
-  goldLight: '#FBBF24',
+  goldDark: '#D97706',
   white: '#FFFFFF',
-  textDim: 'rgba(255,255,255,0.6)'
+  gray: '#94A3B8',
 };
 
 const ONBOARDING_KEY = 'hasSeenOnboarding';
 
 export default function SplashScreen() {
   const router = useRouter();
-  
-  // Animation Values
-  const iconScale = useSharedValue(0);
-  const textOpacity = useSharedValue(0);
-  const loaderRotation = useSharedValue(0);
 
   useEffect(() => {
-    // Start Animations
-    iconScale.value = withSpring(1, { damping: 12 });
-    textOpacity.value = withDelay(500, withTiming(1, { duration: 800 }));
-    loaderRotation.value = withRepeat(
-      withTiming(360, { duration: 1500, easing: Easing.linear }), 
-      -1
-    );
-
     checkOnboarding();
   }, []);
 
@@ -53,7 +31,7 @@ export default function SplashScreen() {
     try {
       const hasSeenOnboarding = await SecureStore.getItemAsync(ONBOARDING_KEY);
       
-      // Wait for animations and branding impact (2.5s)
+      // Wait for branding impact
       await new Promise(resolve => setTimeout(resolve, 2500));
 
       if (hasSeenOnboarding === 'true') {
@@ -62,54 +40,54 @@ export default function SplashScreen() {
         router.replace('/(onboarding)');
       }
     } catch (error) {
-      console.log('Error checking status:', error);
+      console.log('Error:', error);
       router.replace('/(onboarding)');
     }
   };
-
-  // Reanimated Styles
-  const iconStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: iconScale.value }]
-  }));
-
-  const textStyle = useAnimatedStyle(() => ({
-    opacity: textOpacity.value,
-    transform: [{ translateY: withTiming(textOpacity.value === 1 ? 0 : 20) }]
-  }));
 
   return (
     <View style={styles.container}>
       <StatusBar style="light" />
       
+      {/* Background Gradient */}
       <LinearGradient
-        colors={[COLORS.navyDark, COLORS.navyLight]}
+        colors={[COLORS.background, COLORS.cardDark]}
         style={StyleSheet.absoluteFill}
       />
 
+      {/* Decorative Gold Accent Line */}
+      <Animated.View 
+        entering={FadeIn.delay(200).duration(600)}
+        style={styles.accentLine}
+      />
+
+      {/* Main Content */}
       <View style={styles.content}>
-        {/* Animated Icon */}
-        <Animated.View style={[styles.iconContainer, iconStyle]}>
-          <Image 
-            source={require('../assets/images/splash-icon.png')} 
-            style={styles.icon}
-            resizeMode="contain"
-          />
+        {/* Brand Name */}
+        <Animated.View 
+          entering={FadeInUp.delay(100).duration(800).springify()}
+          style={styles.brandContainer}
+        >
+          <Text style={styles.brandText}>
+            SWIFT<Text style={styles.brandAccent}>RIDE</Text>
+          </Text>
         </Animated.View>
 
-        {/* Animated Text Logo */}
-        <Animated.View style={[styles.textContainer, textStyle]}>
-          <Image 
-            source={require('../assets/images/splash-logo.png')} 
-            style={styles.logoImage}
-            resizeMode="contain"
-          />
-          <Text style={styles.tagline}>Premium P2P Car Rental</Text>
-        </Animated.View>
+        {/* Tagline */}
+        <Animated.Text 
+          entering={FadeIn.delay(600).duration(600)}
+          style={styles.tagline}
+        >
+          Premium P2P Car Rental
+        </Animated.Text>
       </View>
 
-      {/* Modern Loader */}
-      <Animated.View style={[styles.loaderContainer, textStyle]}>
-         <View style={styles.loaderLine} />
+      {/* Bottom Loader */}
+      <Animated.View 
+        entering={FadeInDown.delay(800).duration(600)}
+        style={styles.loaderContainer}
+      >
+        <ActivityIndicator size="small" color={COLORS.gold} />
       </Animated.View>
     </View>
   );
@@ -120,53 +98,40 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: COLORS.navyDark,
+    backgroundColor: COLORS.background,
+  },
+  accentLine: {
+    position: 'absolute',
+    top: height * 0.15,
+    width: 60,
+    height: 4,
+    backgroundColor: COLORS.gold,
+    borderRadius: 2,
   },
   content: {
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 40,
   },
-  iconContainer: {
-    marginBottom: 20,
-    shadowColor: COLORS.gold,
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.3,
-    shadowRadius: 20,
-    elevation: 10,
+  brandContainer: {
+    marginBottom: 16,
   },
-  icon: {
-    width: 100,
-    height: 100,
+  brandText: {
+    fontSize: 48,
+    fontWeight: '800',
+    color: COLORS.white,
+    letterSpacing: 4,
   },
-  textContainer: {
-    alignItems: 'center',
-  },
-  logoImage: {
-    width: 180,
-    height: 50,
-    marginBottom: 8,
+  brandAccent: {
+    color: COLORS.gold,
   },
   tagline: {
-    color: COLORS.textDim,
+    color: COLORS.gray,
     fontSize: 14,
     letterSpacing: 2,
-    textTransform: 'uppercase',
     fontWeight: '500',
   },
   loaderContainer: {
     position: 'absolute',
-    bottom: 50,
-    width: 40, 
-    height: 4,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    borderRadius: 2,
-    overflow: 'hidden',
+    bottom: 80,
   },
-  loaderLine: {
-    flex: 1,
-    backgroundColor: COLORS.gold,
-    borderRadius: 2,
-    width: '50%', // Simple indication
-  }
 });

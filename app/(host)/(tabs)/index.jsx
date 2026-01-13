@@ -10,51 +10,52 @@ import {
   ActivityIndicator,
   RefreshControl,
   StatusBar,
+  Image,
 } from "react-native";
 import { router, useFocusEffect } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useAuth } from "../../../context/AuthContext";
-import api from "../../../services/api"; // Unified Analytics API
-import Animated, { FadeInDown } from "react-native-reanimated";
+import api from "../../../services/api";
+import bookingService from "../../../services/bookingService"; // ✅ Imported Booking Service
+import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
 import FloatingChatButton from "../../../components/FloatingChatButton";
 
 const { width } = Dimensions.get("window");
 
 // ============================================
-// 🎨 PREMIUM THEME (Aligned with Analytics)
+// 🎨 PREMIUM THEME 2.0
 // ============================================
 const COLORS = {
   navy: {
+    950: "#020617",
     900: "#0A1628",
     800: "#0F2137",
-    700: "#152A46",
-    600: "#1E3A5F",
+    700: "#1E293B",
   },
   gold: {
-    600: "#D99413",
+    600: "#D97706",
     500: "#F59E0B",
     400: "#FBBF24",
+    glow: "rgba(245, 158, 11, 0.4)",
   },
   emerald: {
     500: "#10B981",
-    400: "#34D399",
-  },
-  gray: {
-    400: "#9CA3AF",
-    500: "#6B7280",
-    600: "#4B5563",
-  },
-  white: "#FFFFFF",
-  blue: {
-    500: "#3B82F6",
+    glow: "rgba(16, 185, 129, 0.4)",
   },
   rose: {
     500: "#F43F5E",
+    glow: "rgba(244, 63, 94, 0.4)",
   },
-  purple: {
-    500: "#8B5CF6",
+  blue: {
+    500: "#3B82F6",
+  },
+  white: "#FFFFFF",
+  gray: {
+    300: "#CBD5E1",
+    400: "#94A3B8",
+    500: "#64748B",
   },
 };
 
@@ -65,13 +66,37 @@ export default function HostDashboard() {
 
   const [stats, setStats] = useState({
     totalCars: 0,
-    activeBookings: 0, // "Active Now"
+    activeBookings: 0,
     totalBookings: 0,
-    totalEarnings: 0, // Lifetime
+    totalEarnings: 0,
     pendingEarnings: 0,
     availableBalance: 0,
-    pendingRequests: 0, // We might need to fetch this separately if not in analytics
+    pendingRequests: 0,
   });
+
+  const [tips] = useState([
+    {
+      id: 1,
+      title: "Boost Your Earnings",
+      desc: "Enable instant booking to get 30% more reservations.",
+      icon: "flash",
+      color: COLORS.gold[500],
+    },
+    {
+      id: 2,
+      title: "Superhost Status",
+      desc: "Maintain a 4.8 rating to unlock premium badges.",
+      icon: "trophy",
+      color: COLORS.blue[500],
+    },
+    {
+      id: 3,
+      title: "Clean Cars Matter",
+      desc: "uploaded photos of clean exterior increases booking.",
+      icon: "images-outline",
+      color: COLORS.emerald[500],
+    },
+  ]);
 
   useFocusEffect(
     useCallback(() => {
@@ -86,14 +111,19 @@ export default function HostDashboard() {
       const analyticsRes = await api.get("/analytics/dashboard");
       const aData = analyticsRes.data.data.stats;
 
-      // 2. Fetch Pending Requests (Specific to Dashboard Notification)
-      // We can keep using bookingService or just filter if we had the list,
-      // but let's assume valid "pending" count logic or fetch it.
-      // For now, let's do a quick separate call or rely on what we have.
-      // Since analytics aggregate doesn't return "pending request count" specifically (it has active/completed),
-      // we might want to add it to analytics controller later. For now, let's mock or fetch lightly.
-      // Actually, let's rely on analytics data for the main stats.
-      // For notifications badge, I'll allow it to be 0 for now to keep this robust.
+      // 2. Fetch Pending Requests using Booking Service
+      let pendingReqs = 0;
+      try {
+        const bookingsRes = await bookingService.getHostBookings(); 
+        const bookings = bookingsRes.data || []; // Assuming response structure { data: [...] } or array
+        // Flexible fallback based on actual response structure if wrapper exists
+        const bookingList = Array.isArray(bookings) ? bookings : bookings.bookings || []; 
+        
+        pendingReqs = bookingList.filter(b => b.status === "pending").length;
+      } catch (bkErr) {
+        console.log("Error fetching bookings for badge:", bkErr);
+        pendingReqs = user?.pendingRequests || 0; // Fallback
+      }
 
       setStats({
         totalCars: aData.totalCars,
@@ -102,7 +132,7 @@ export default function HostDashboard() {
         totalEarnings: aData.totalEarnings,
         pendingEarnings: aData.pendingEarnings,
         availableBalance: aData.availableBalance,
-        pendingRequests: 0, // Placeholder until added to analytics API
+        pendingRequests: pendingReqs,
       });
     } catch (error) {
       console.log("Dashboard Error:", error);
@@ -117,26 +147,56 @@ export default function HostDashboard() {
     fetchDashboardData();
   };
 
-  // Format Currency
   const formatMoney = (val) => {
     return val?.toLocaleString("en-US", { minimumFractionDigits: 0 });
   };
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={COLORS.navy[900]} />
+      <StatusBar barStyle="light-content" backgroundColor={COLORS.navy[950]} />
 
-      {/* Background Gradient */}
-      <LinearGradient
-        colors={[COLORS.navy[900], "#050B14"]}
-        style={StyleSheet.absoluteFill}
-      />
+      {/* Decorative Background Glows */}
+      <View style={styles.glowTopLeft} />
+      <View style={styles.glowBottomRight} />
 
       <SafeAreaView edges={["top"]} style={{ flex: 1 }}>
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={() => router.push("/(host)/(tabs)/profile")}
+            style={styles.userInfo}
+          >
+            <LinearGradient
+              colors={[COLORS.gold[500], COLORS.gold[600]]}
+              style={styles.avatarBorder}
+            >
+              <Image
+                source={{
+                  uri: user?.profilePicture || "https://ui-avatars.com/api/?name=" + (user?.fullName || "Host"),
+                }}
+                style={styles.avatarImage}
+              />
+            </LinearGradient>
+            <View>
+              <Text style={styles.greeting}>Good Evening,</Text>
+              <Text style={styles.userName}>
+                {user?.fullName?.split(" ")[0] || "Host"}
+              </Text>
+            </View>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.notifBtn}
+            onPress={() => router.push("/(host)/bookings")}
+          >
+            <Ionicons name="notifications-outline" size={24} color={COLORS.white} />
+            {stats.pendingRequests > 0 && <View style={styles.dot} />}
+          </TouchableOpacity>
+        </View>
+
         <ScrollView
-          style={styles.content}
-          contentContainerStyle={{ paddingBottom: 100 }}
           showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: 100 }}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
@@ -145,250 +205,249 @@ export default function HostDashboard() {
             />
           }
         >
-          {/* Header Section */}
-          <View style={styles.header}>
-            <View style={styles.userInfo}>
-              <LinearGradient
-                colors={[COLORS.gold[500], COLORS.gold[600]]}
-                style={styles.avatarContainer}
-              >
-                {user?.fullName ? (
-                  <Text style={styles.avatarText}>{user.fullName[0]}</Text>
-                ) : (
-                  <Ionicons name="person" size={20} color={COLORS.navy[900]} />
-                )}
-              </LinearGradient>
-              <View>
-                <Text style={styles.greeting}>Welcome back,</Text>
-                <Text style={styles.userName}>
-                  {user?.fullName?.split(" ")[0] || "Host"}
-                </Text>
-              </View>
-            </View>
-            <TouchableOpacity
-              onPress={() => router.push("/(host)/bookings")}
-              style={styles.iconBtn}
-            >
-              <Ionicons
-                name="notifications-outline"
-                size={24}
-                color={COLORS.white}
-              />
-              {stats.pendingRequests > 0 && (
-                <View style={styles.badge}>
-                  <Text style={styles.badgeText}>{stats.pendingRequests}</Text>
-                </View>
-              )}
-            </TouchableOpacity>
-          </View>
-
-          {/* Premium Wallet Card - Animated */}
-          <Animated.View entering={FadeInDown.delay(100).springify()}>
-            <TouchableOpacity
-              activeOpacity={0.9}
-              onPress={() => router.push("/(host)/(tabs)/wallet")}
-              style={styles.walletContainer}
-            >
-              <LinearGradient
-                colors={[COLORS.gold[600], COLORS.gold[500], COLORS.gold[400]]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.walletCard}
-              >
-                <View style={styles.walletHeader}>
-                  <View style={styles.chip} />
-                  <MaterialCommunityIcons
-                    name="contactless-payment"
-                    size={24}
-                    color="rgba(255,255,255,0.7)"
-                  />
-                </View>
-
-                <View style={styles.walletBalance}>
-                  <Text style={styles.balanceLabel}>Available Balance</Text>
-                  <Text style={styles.balanceValue}>
-                    PKR {formatMoney(stats.availableBalance)}
-                  </Text>
-                </View>
-
-                <View style={styles.walletFooter}>
-                  <View>
-                    <Text style={styles.pendingLabel}>Pending</Text>
-                    <Text style={styles.pendingValue}>
-                      PKR {formatMoney(stats.pendingEarnings)}
-                    </Text>
-                  </View>
-                  <MaterialCommunityIcons
-                    name="credit-card-chip"
-                    size={30}
-                    color="rgba(255,255,255,0.8)"
-                  />
-                </View>
-
-                {/* Decorative Circles */}
-                <View style={styles.walletDeco1} />
-                <View style={styles.walletDeco2} />
-              </LinearGradient>
-            </TouchableOpacity>
-          </Animated.View>
-
-          {/* Quick Actions - Horizontal Scroll */}
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Quick Actions</Text>
-          </View>
-          <Animated.View entering={FadeInDown.delay(200).springify()}>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              style={styles.actionRow}
-              contentContainerStyle={{ paddingHorizontal: 0, gap: 12 }}
-            >
-              <ActionCard
-                icon="add-circle"
-                label="Add Car"
-                onPress={() => router.push("/(host)/car/create")}
-                color={COLORS.emerald[500]}
-              />
-              <ActionCard
-                icon="car-sport"
-                label="Bookings"
-                onPress={() => router.push("/(host)/bookings")}
-                color={COLORS.blue[500]}
-              />
-              <ActionCard
-                icon="qr-code-outline"
-                label="Scan QR"
-                onPress={() => router.push("/(host)/bookings/scan")}
-                color={COLORS.gold[500]}
-              />
-              <ActionCard
-                icon="bar-chart" // Changed to analytics icon
-                label="Analytics"
-                onPress={() => router.push("/common/performance-analytics")}
-                color={COLORS.purple[500]}
-              />
-            </ScrollView>
-          </Animated.View>
-
-          {/* Analytics Grid - Glassmorphism */}
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Business Overview</Text>
-          </View>
-
           {loading ? (
-            <ActivityIndicator size="large" color={COLORS.gold[500]} />
+             <View style={{ marginTop: 50 }}>
+              <ActivityIndicator size="large" color={COLORS.gold[500]} />
+            </View>
           ) : (
-            <View style={styles.grid}>
-              <OverviewCard
-                label="Total Fleet"
-                value={stats.totalCars}
-                icon="car"
-                color={COLORS.rose[500]}
-                delay={300}
-              />
-              <OverviewCard
-                label="Active Now"
-                value={stats.activeBookings}
-                icon="flash"
-                color={COLORS.emerald[400]}
-                delay={400}
-              />
-              <OverviewCard
-                label="Total Bookings"
-                value={stats.totalBookings}
-                icon="calendar"
-                color={COLORS.blue[500]}
-                delay={500}
-              />
-              <OverviewCard
-                label="Lifetime Earn"
-                value={
-                  stats.totalEarnings >= 1000
-                    ? (stats.totalEarnings / 1000).toFixed(1) + "k"
-                    : stats.totalEarnings
-                }
-                icon="cash"
-                color={COLORS.gold[500]}
-                delay={600}
-              />
+            <View style={styles.content}>
+              
+              {/* 🚨 ACTION CENTER */}
+              {stats.pendingRequests > 0 && (
+                <Animated.View entering={FadeInDown.delay(100).springify()}>
+                  <TouchableOpacity 
+                    style={styles.alertCard}
+                    onPress={() => router.push("/(host)/bookings")}
+                  >
+                    <LinearGradient
+                      colors={[COLORS.rose[500], "#E11D48"]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      style={styles.alertGradient}
+                    >
+                      <View style={styles.alertIcon}>
+                        <Ionicons name="alert-circle" size={24} color={COLORS.white} />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.alertTitle}>Action Required</Text>
+                        <Text style={styles.alertDesc}>
+                          {stats.pendingRequests} booking request{stats.pendingRequests > 1 ? 's' : ''} pending approval
+                        </Text>
+                      </View>
+                      <Ionicons name="chevron-forward" size={20} color={COLORS.white} />
+                    </LinearGradient>
+                  </TouchableOpacity>
+                </Animated.View>
+              )}
+
+              {/* 💰 PREMIUM EARNINGS CARD */}
+              <Animated.View entering={FadeInDown.delay(200).springify()}>
+                <TouchableOpacity
+                  activeOpacity={0.9}
+                  onPress={() => router.push("/(host)/(tabs)/wallet")}
+                >
+                  <LinearGradient
+                    colors={[COLORS.navy[800], COLORS.navy[900]]}
+                    style={styles.mainCard}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                  >
+                    {/* Glass Effect Overlay */}
+                    <View style={styles.glassOverlay} />
+                    
+                    <View style={styles.cardHeader}>
+                      <Text style={styles.cardLabel}>Total Balance</Text>
+                      <View style={styles.proBadge}>
+                        <Text style={styles.proText}>PRO</Text>
+                      </View>
+                    </View>
+
+                    <Text style={styles.mainBalance}>
+                      <Text style={styles.currency}>PKR</Text>{" "}
+                      {formatMoney(stats.availableBalance)}
+                    </Text>
+
+                    <View style={styles.cardDivider} />
+
+                    <View style={styles.cardRow}>
+                      <View>
+                        <Text style={styles.subLabel}>Pending Earnings</Text>
+                        <Text style={styles.subValue}>
+                          PKR {formatMoney(stats.pendingEarnings)}
+                        </Text>
+                      </View>
+                       <View style={{ alignItems: "flex-end" }}>
+                        <Text style={styles.subLabel}>Lifetime</Text>
+                        <Text style={styles.subValue}>
+                          PKR {(stats.totalEarnings / 1000).toFixed(1)}k
+                        </Text>
+                      </View>
+                    </View>
+                    
+                    <View style={styles.cardGlow} />
+                  </LinearGradient>
+                </TouchableOpacity>
+              </Animated.View>
+
+              {/* ⚡ QUICK STATS GRID (Clickable) */}
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>Business Overview</Text>
+              </View>
+
+              <View style={styles.grid}>
+                <OverviewCard 
+                  label="Active Now"
+                  value={stats.activeBookings}
+                  icon="flash"
+                  color={COLORS.emerald[500]}
+                  delay={300}
+                  onPress={() => router.push("/(host)/bookings")}
+                />
+                <OverviewCard 
+                  label="Total Fleet"
+                  value={stats.totalCars}
+                  icon="car-sport"
+                  color={COLORS.blue[500]}
+                  delay={400}
+                  onPress={() => router.push("/(host)/(tabs)/fleet")}
+                />
+                <OverviewCard 
+                  label="Total Trips"
+                  value={stats.totalBookings}
+                  icon="map" // or list
+                  color={COLORS.gold[500]}
+                  delay={500}
+                  onPress={() => router.push("/(host)/bookings")}
+                />
+                <OverviewCard 
+                  label="Earnings"
+                  value="Report"
+                  icon="bar-chart"
+                  color={COLORS.rose[500]}
+                  delay={600}
+                  onPress={() => router.push("/common/earnings-report")} // Direct to report
+                />
+              </View>
+
+              {/* 📢 PRO TIPS CAROUSEL */}
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>Pro Tips for Hosts</Text>
+              </View>
+
+              <ScrollView 
+                horizontal 
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{ paddingRight: 20, gap: 16 }}
+              >
+                {tips.map((tip, index) => (
+                  <Animated.View 
+                    key={tip.id} 
+                    entering={FadeInDown.delay(700 + (index * 100)).springify()}
+                  >
+                    <LinearGradient
+                      colors={[COLORS.navy[800], COLORS.navy[800]]}
+                      style={styles.tipCard}
+                    >
+                      <View style={[styles.tipIcon, { backgroundColor: tip.color + '20' }]}>
+                        <Ionicons name={tip.icon} size={20} color={tip.color} />
+                      </View>
+                      <Text style={styles.tipTitle}>{tip.title}</Text>
+                      <Text style={styles.tipDesc}>{tip.desc}</Text>
+                    </LinearGradient>
+                  </Animated.View>
+                ))}
+              </ScrollView>
+
             </View>
           )}
-
-          {/* Activity Section can replace the old activity feed or just show a simplified version */}
         </ScrollView>
       </SafeAreaView>
 
-      {/* Floating AI Chat Button */}
       <FloatingChatButton />
     </View>
   );
 }
 
-// ============================================
-// 🧩 COMPONENTS
-// ============================================
-
-const ActionCard = ({ icon, label, onPress, color }) => (
-  <TouchableOpacity onPress={onPress}>
-    <LinearGradient
-      colors={[COLORS.navy[800], COLORS.navy[700]]}
-      style={styles.actionCard}
-    >
-      <View style={[styles.actionIconBox, { backgroundColor: color + "15" }]}>
-        <Ionicons name={icon} size={24} color={color} />
-      </View>
-      <Text style={styles.actionLabel}>{label}</Text>
-    </LinearGradient>
-  </TouchableOpacity>
-);
-
-const OverviewCard = ({ label, value, icon, color, delay }) => (
-  <Animated.View
+// 🧩 SUB-COMPONENTS
+const OverviewCard = ({ label, value, icon, color, delay, onPress }) => (
+  <Animated.View 
+    style={styles.statCardWrapper}
     entering={FadeInDown.delay(delay).springify()}
-    style={styles.overviewWrapper}
   >
-    <LinearGradient
-      colors={[COLORS.navy[800], COLORS.navy[700]]}
-      style={styles.overviewCard}
-    >
-      <View style={styles.overviewHeader}>
-        <View style={[styles.statIcon, { backgroundColor: color + "15" }]}>
-          <Ionicons name={icon} size={18} color={color} />
+    <TouchableOpacity activeOpacity={0.8} onPress={onPress}>
+      <LinearGradient
+        colors={[COLORS.navy[800], "#162032"]}
+        style={styles.statCard}
+      >
+        <View style={[styles.statIconBox, { shadowColor: color }]}>
+          <Ionicons name={icon} size={20} color={color} />
         </View>
-        <Text style={styles.overviewValue}>{value}</Text>
-      </View>
-      <Text style={styles.overviewLabel}>{label}</Text>
-    </LinearGradient>
+        <Text style={styles.statValue}>{value}</Text>
+        <Text style={styles.statLabel}>{label}</Text>
+      </LinearGradient>
+    </TouchableOpacity>
   </Animated.View>
 );
 
-// ============================================
-// 💅 STYLES
-// ============================================
+// 🎨 STYLES
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.navy[900] },
-  content: { padding: 20 },
-
-  // Header
+  container: {
+    flex: 1,
+    backgroundColor: COLORS.navy[950],
+  },
+  glowTopLeft: {
+    position: 'absolute',
+    top: -100,
+    left: -100,
+    width: 300,
+    height: 300,
+    backgroundColor: COLORS.navy[800],
+    borderRadius: 150,
+    opacity: 0.5,
+  },
+  glowBottomRight: {
+    position: 'absolute',
+    bottom: -100,
+    right: -100,
+    width: 300,
+    height: 300,
+    backgroundColor: COLORS.gold[600],
+    borderRadius: 150,
+    opacity: 0.1,
+  },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 25,
+    paddingHorizontal: 20,
+    paddingVertical: 15,
   },
-  userInfo: { flexDirection: "row", alignItems: "center", gap: 12 },
-  avatarContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 16, // Squircle
-    justifyContent: "center",
+  userInfo: {
+    flexDirection: "row",
     alignItems: "center",
+    gap: 12,
   },
-  avatarText: { color: COLORS.navy[900], fontSize: 20, fontWeight: "700" },
-  greeting: { color: COLORS.gray[400], fontSize: 13 },
-  userName: { color: COLORS.white, fontSize: 18, fontWeight: "700" },
-
-  iconBtn: {
+  avatarBorder: {
+    padding: 2,
+    borderRadius: 14,
+  },
+  avatarImage: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: COLORS.navy[800],
+  },
+  greeting: {
+    color: COLORS.gray[400],
+    fontSize: 12,
+    fontWeight: "500",
+  },
+  userName: {
+    color: COLORS.white,
+    fontSize: 18,
+    fontWeight: "700",
+  },
+  notifBtn: {
     width: 44,
     height: 44,
     borderRadius: 14,
@@ -398,162 +457,204 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS.navy[700],
   },
-  badge: {
+  dot: {
     position: "absolute",
-    top: -5,
-    right: -5,
+    top: 10,
+    right: 12,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
     backgroundColor: COLORS.rose[500],
-    minWidth: 18,
-    height: 18,
-    borderRadius: 9,
-    justifyContent: "center",
-    alignItems: "center",
-    borderWidth: 2,
-    borderColor: COLORS.navy[900],
+    borderWidth: 1,
+    borderColor: COLORS.navy[800],
   },
-  badgeText: { color: COLORS.white, fontSize: 9, fontWeight: "800" },
-
-  // Wallet Card
-  walletContainer: {
-    marginBottom: 30,
-    shadowColor: COLORS.gold[500],
+  content: {
+    padding: 20,
+    paddingTop: 10,
+  },
+  // ACTION ALERT
+  alertCard: {
+    marginBottom: 20,
+    borderRadius: 20,
+    overflow: 'hidden',
+    shadowColor: COLORS.rose[500],
     shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.25,
-    shadowRadius: 16,
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
     elevation: 8,
   },
-  walletCard: {
-    borderRadius: 24,
-    padding: 24,
-    paddingVertical: 24,
-    position: "relative",
-    overflow: "hidden",
-    minHeight: 180,
-    justifyContent: "space-between",
+  alertGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    gap: 12,
   },
-  walletHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 10,
-  },
-  chip: {
+  alertIcon: {
     width: 40,
-    height: 28,
-    borderRadius: 6,
-    backgroundColor: "rgba(255,255,255,0.3)",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.4)",
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  walletBalance: { marginBottom: 10 },
-  balanceLabel: {
-    color: "rgba(255,255,255,0.8)",
-    fontSize: 13,
-    marginBottom: 4,
-    letterSpacing: 0.5,
-  },
-  balanceValue: { color: COLORS.white, fontSize: 28, fontWeight: "800" },
-  walletFooter: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  pendingLabel: {
-    color: "rgba(255,255,255,0.7)",
-    fontSize: 11,
-    fontWeight: "600",
-  },
-  pendingValue: {
+  alertTitle: {
     color: COLORS.white,
     fontSize: 16,
-    fontWeight: "700",
+    fontWeight: '700',
   },
-  walletDeco1: {
-    position: "absolute",
-    bottom: -50,
-    right: -50,
-    width: 150,
-    height: 150,
-    borderRadius: 75,
-    backgroundColor: "rgba(255,255,255,0.1)",
+  alertDesc: {
+    color: 'rgba(255,255,255,0.9)',
+    fontSize: 13,
   },
-  walletDeco2: {
-    position: "absolute",
-    top: -30,
-    right: 40,
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: "rgba(255,255,255,0.05)",
-  },
-
-  // Section Headers
-  sectionHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 16,
-    marginTop: 10,
-  },
-  sectionTitle: { color: COLORS.white, fontSize: 17, fontWeight: "700" },
-
-  // Quick Actions (Horizontal)
-  actionRow: { marginBottom: 30 },
-  actionCard: {
-    width: 100,
-    height: 100,
-    borderRadius: 20,
-    padding: 12,
-    justifyContent: "center",
-    alignItems: "center",
+  // MAIN CARD
+  mainCard: {
+    borderRadius: 24,
+    padding: 24,
     borderWidth: 1,
-    borderColor: COLORS.navy[600],
-    marginRight: 4, // tiny margin handled by gap in container
+    borderColor: COLORS.navy[700],
+    marginBottom: 30,
+    overflow: 'hidden',
   },
-  actionIconBox: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
-    justifyContent: "center",
-    alignItems: "center",
+  glassOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(255,255,255,0.02)',
+  },
+  cardGlow: {
+    position: 'absolute',
+    top: -20,
+    right: -20,
+    width: 100,
+    height: 100,
+    backgroundColor: COLORS.gold[500],
+    opacity: 0.15,
+    blurRadius: 50,
+    borderRadius: 50,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     marginBottom: 8,
   },
-  actionLabel: {
+  cardLabel: {
     color: COLORS.gray[400],
-    fontSize: 12,
-    fontWeight: "500",
-    textAlign: "center",
+    fontSize: 14,
+    fontWeight: '500',
   },
-
-  // Overview Grid
-  grid: { flexDirection: "row", flexWrap: "wrap", gap: 12, marginBottom: 30 },
-  overviewWrapper: {
+  proBadge: {
+    backgroundColor: COLORS.gold[500],
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  proText: {
+    color: COLORS.navy[950],
+    fontSize: 10,
+    fontWeight: '800',
+  },
+  mainBalance: {
+    fontSize: 32,
+    fontWeight: '800',
+    color: COLORS.white,
+    letterSpacing: -1,
+  },
+  currency: {
+    fontSize: 18,
+    fontWeight: '500',
+    color: COLORS.gold[500],
+  },
+  cardDivider: {
+    height: 1,
+    backgroundColor: COLORS.navy[700],
+    marginVertical: 16,
+  },
+  cardRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  subLabel: {
+    color: COLORS.gray[500],
+    fontSize: 12,
+    marginBottom: 4,
+  },
+  subValue: {
+    color: COLORS.gray[300],
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  // STATS GRID
+  sectionHeader: {
+    marginBottom: 16,
+  },
+  sectionTitle: {
+    color: COLORS.white,
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  grid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+    marginBottom: 30,
+  },
+  statCardWrapper: {
     width: (width - 52) / 2,
   },
-  overviewCard: {
+  statCard: {
     padding: 16,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: COLORS.navy[700],
+    borderColor: COLORS.navy[800],
     height: 110,
-    justifyContent: "space-between",
+    justifyContent: 'space-between',
   },
-  overviewHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-  },
-  statIcon: {
+  statIconBox: {
     width: 36,
     height: 36,
-    borderRadius: 12,
-    justifyContent: "center",
-    alignItems: "center",
+    borderRadius: 10,
+    backgroundColor: COLORS.navy[900],
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 4,
   },
-  overviewValue: {
-    fontSize: 20,
-    fontWeight: "700",
+  statValue: {
+    fontSize: 22,
+    fontWeight: '700',
     color: COLORS.white,
-    marginTop: 4,
+    marginTop: 8,
   },
-  overviewLabel: { color: COLORS.gray[500], fontSize: 12, fontWeight: "600" },
+  statLabel: {
+    color: COLORS.gray[500],
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  // TIPS
+  tipCard: {
+    width: 200,
+    height: 140,
+    borderRadius: 20,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: COLORS.navy[700],
+    justifyContent: 'space-between',
+  },
+  tipIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  tipTitle: {
+    color: COLORS.white,
+    fontWeight: '700',
+    fontSize: 15,
+    marginTop: 8,
+  },
+  tipDesc: {
+    color: COLORS.gray[400],
+    fontSize: 11,
+    lineHeight: 16,
+  },
 });
+
+

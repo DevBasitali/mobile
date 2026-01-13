@@ -71,7 +71,7 @@ export default function EditProfile() {
     }
 
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ImagePicker.MediaType.Images, // FIXED: Removed deprecated Options
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.5,
@@ -95,6 +95,7 @@ export default function EditProfile() {
     setIsSubmitting(true);
     try {
       // 1. Update Text Details
+      console.log("Updating profile text details...");
       await authService.updateProfile({
         fullName: form.fullName,
         phoneNumber: form.phoneNumber,
@@ -102,6 +103,7 @@ export default function EditProfile() {
 
       // 2. Update Profile Picture (if selected)
       if (selectedImage) {
+        console.log("Uploading profile picture...", selectedImage);
         const formData = new FormData();
         const filename = selectedImage.split("/").pop();
         const match = /\.(\w+)$/.exec(filename);
@@ -113,11 +115,13 @@ export default function EditProfile() {
           type,
         });
 
-        await authService.updateProfilePicture(formData);
+        const uploadRes = await authService.updateProfilePicture(formData);
+        console.log("Upload Response:", JSON.stringify(uploadRes));
       }
 
       // Refresh User Context
       if (refreshUser) {
+        console.log("Refreshing user context...");
         await refreshUser();
       }
 
