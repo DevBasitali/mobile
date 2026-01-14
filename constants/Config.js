@@ -1,4 +1,4 @@
-const PRODUCTION_API_URL = "http://34.47.183.227:5000/api";
+const PRODUCTION_API_URL = "https://operate-yourself-bird-reporting.trycloudflare.com/api";
 
 const CUSTOM_URL = process.env.EXPO_PUBLIC_API_URL;
 const IP_ADDRESS = process.env.EXPO_PUBLIC_SERVER_IP;
