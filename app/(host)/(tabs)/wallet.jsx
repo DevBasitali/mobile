@@ -192,9 +192,33 @@ export default function HostWallet() {
         {/* ⚡ QUICK ACTIONS */}
         <View style={styles.actionsContainer}>
           <ActionButton icon="arrow-down-circle-outline" label="Withdraw" onPress={() => setShowWithdrawModal(true)} />
-          <ActionButton icon="document-text-outline" label="Statement" />
-          <ActionButton icon="card-outline" label="Cards" />
-          <ActionButton icon="settings-outline" label="Settings" />
+          <ActionButton 
+            icon="document-text-outline" 
+            label="Statement" 
+            onPress={() => showAlert({
+              title: 'Statement',
+              message: 'Detailed statement export is coming soon!',
+              type: 'info',
+            })} 
+          />
+          <ActionButton 
+            icon="card-outline" 
+            label="Cards" 
+            onPress={() => showAlert({
+              title: 'Cards',
+              message: 'Card management is coming soon!',
+              type: 'info',
+            })} 
+          />
+          <ActionButton 
+            icon="settings-outline" 
+            label="Settings" 
+            onPress={() => showAlert({
+              title: 'Wallet Settings',
+              message: 'Wallet settings are coming soon!',
+              type: 'info',
+            })} 
+          />
         </View>
 
         {/* 📝 RECENT TRANSACTIONS */}
