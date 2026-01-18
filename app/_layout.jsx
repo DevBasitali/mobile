@@ -1,10 +1,11 @@
-import { Stack } from 'expo-router';
-import { AuthProvider } from '../context/AuthContext';
-import { AlertProvider } from '../context/AlertContext';
-import { useFonts } from 'expo-font';
-import { useEffect } from 'react';
-import * as SplashScreen from 'expo-splash-screen';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { Stack } from "expo-router";
+import { AuthProvider } from "../context/AuthContext";
+import { AlertProvider } from "../context/AlertContext";
+import { SocketProvider } from "../context/SocketContext";
+import { useFonts } from "expo-font";
+import { useEffect } from "react";
+import * as SplashScreen from "expo-splash-screen";
+import FontAwesome from "@expo/vector-icons/FontAwesome";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -26,23 +27,25 @@ export default function RootLayout() {
   return (
     <AuthProvider>
       <AlertProvider>
-        <Stack screenOptions={{ headerShown: false }}>
-          {/* Entry Flow */}
-          <Stack.Screen name="index" />
-          <Stack.Screen name="splash" />
-          <Stack.Screen name="(onboarding)" />
-          <Stack.Screen name="welcome" />
-          <Stack.Screen name="role-select" />
+        <SocketProvider>
+          <Stack screenOptions={{ headerShown: false }}>
+            {/* Entry Flow */}
+            <Stack.Screen name="index" />
+            <Stack.Screen name="splash" />
+            <Stack.Screen name="(onboarding)" />
+            <Stack.Screen name="welcome" />
+            <Stack.Screen name="role-select" />
 
-          {/* Auth Modules */}
-          <Stack.Screen name="(auth)" />
-          <Stack.Screen name="(customer)" />
-          <Stack.Screen name="(host)" />
+            {/* Auth Modules */}
+            <Stack.Screen name="(auth)" />
+            <Stack.Screen name="(customer)" />
+            <Stack.Screen name="(host)" />
 
-          {/* Specific Screens */}
-          <Stack.Screen name="kyc/index" />
-          <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
-        </Stack>
+            {/* Specific Screens */}
+            <Stack.Screen name="kyc/index" />
+            <Stack.Screen name="modal" options={{ presentation: "modal" }} />
+          </Stack>
+        </SocketProvider>
       </AlertProvider>
     </AuthProvider>
   );

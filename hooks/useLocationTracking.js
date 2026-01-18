@@ -1,92 +1,160 @@
 // hooks/useLocationTracking.js
-import { useState, useEffect, useRef } from "react";
+// Professional location tracking hook for customers during ongoing trips
+import { useState, useEffect, useRef, useCallback } from "react";
 import * as Location from "expo-location";
-import { sendLocation, connectSocket, disconnectSocket } from "../services/socketService";
+import { useSocket } from "../context/SocketContext";
+
+// Constants - read from env with fallback
+const LOCATION_INTERVAL_MS = parseInt(
+  process.env.EXPO_PUBLIC_LOCATION_INTERVAL_MS || "60000",
+  10,
+);
+const DISTANCE_INTERVAL_M = parseInt(
+  process.env.EXPO_PUBLIC_LOCATION_DISTANCE_M || "50",
+  10,
+);
 
 /**
  * Hook for tracking and sending location updates
  * Used by CUSTOMER when their trip is ongoing
+ *
+ * @param {string} bookingId - The booking ID to track
+ * @param {boolean} isActive - Whether tracking should be active
+ * @returns {Object} - { location, isTracking, error, lastSentAt, stopTracking }
  */
 export const useLocationTracking = (bookingId, isActive = false) => {
-    const [location, setLocation] = useState(null);
-    const [error, setError] = useState(null);
-    const [isTracking, setIsTracking] = useState(false);
-    const watchRef = useRef(null);
+  const [location, setLocation] = useState(null);
+  const [error, setError] = useState(null);
+  const [isTracking, setIsTracking] = useState(false);
+  const [lastSentAt, setLastSentAt] = useState(null);
+  const watchRef = useRef(null);
+  const isMountedRef = useRef(true);
 
-    useEffect(() => {
-        if (!isActive || !bookingId) return;
+  // Get socket methods from context
+  const { sendLocation, isConnected, connect } = useSocket();
 
-        let isMounted = true;
+  // Start location tracking
+  const startTracking = useCallback(async () => {
+    if (!bookingId) {
+      console.log("⚠️ No booking ID provided for tracking");
+      return false;
+    }
 
-        const startTracking = async () => {
-            try {
-                // Request permissions
-                const { status } = await Location.requestForegroundPermissionsAsync();
-                if (status !== "granted") {
-                    setError("Location permission denied");
-                    return;
-                }
+    try {
+      console.log("🚗 Starting location tracking for booking:", bookingId);
+      console.log("⏱️ Interval: every", LOCATION_INTERVAL_MS / 1000, "seconds");
 
-                // Connect socket
-                connectSocket();
-                setIsTracking(true);
+      // Request foreground permission
+      const { status: foregroundStatus } =
+        await Location.requestForegroundPermissionsAsync();
+      if (foregroundStatus !== "granted") {
+        const errorMsg = "Location permission denied";
+        console.log("❌", errorMsg);
+        setError(errorMsg);
+        return false;
+      }
 
-                // Start watching location
-                // Time interval from env (defaults to 10 seconds)
-                const intervalMs = Number(process.env.EXPO_PUBLIC_LOCATION_INTERVAL_MS) || 1000;
+      // Ensure socket is connected
+      if (!isConnected) {
+        console.log("🔌 Socket not connected, connecting...");
+        connect();
+      }
 
-                watchRef.current = await Location.watchPositionAsync(
-                    {
-                        accuracy: Location.Accuracy.High,
-                        timeInterval: intervalMs,
-                        distanceInterval: 10, // Update if moved 10 meters
-                    },
-                    (newLocation) => {
-                        if (!isMounted) return;
+      // Stop any existing watch
+      if (watchRef.current) {
+        await watchRef.current.remove();
+        watchRef.current = null;
+      }
 
-                        const coords = newLocation.coords;
-                        setLocation(coords);
+      // Start watching location with 10-second interval
+      watchRef.current = await Location.watchPositionAsync(
+        {
+          accuracy: Location.Accuracy.High,
+          timeInterval: LOCATION_INTERVAL_MS, // 10 seconds
+          distanceInterval: DISTANCE_INTERVAL_M, // 10 meters
+        },
+        (newLocation) => {
+          if (!isMountedRef.current) return;
 
-                        // Send to server
-                        sendLocation(bookingId, coords);
-                        console.log("📍 Sent location:", coords.latitude, coords.longitude);
-                    }
-                );
-            } catch (err) {
-                console.error("Location tracking error:", err);
-                setError(err.message);
-            }
-        };
+          const coords = newLocation.coords;
+          setLocation(coords);
 
-        startTracking();
+          // Send location via socket
+          const sent = sendLocation(bookingId, coords);
 
-        // Cleanup
-        return () => {
-            isMounted = false;
-            if (watchRef.current) {
-                watchRef.current.remove();
-                watchRef.current = null;
-            }
-            setIsTracking(false);
-        };
-    }, [bookingId, isActive]);
+          if (sent) {
+            setLastSentAt(new Date());
+            console.log(
+              "📍 Location sent:",
+              coords.latitude.toFixed(6),
+              coords.longitude.toFixed(6),
+              "| Speed:",
+              (coords.speed || 0).toFixed(1),
+              "m/s",
+            );
+          } else {
+            console.warn(
+              "⚠️ Failed to send location - socket may be disconnected",
+            );
+          }
+        },
+      );
 
-    // Stop tracking manually
-    const stopTracking = () => {
-        if (watchRef.current) {
-            watchRef.current.remove();
-            watchRef.current = null;
-        }
-        disconnectSocket();
-        setIsTracking(false);
+      setIsTracking(true);
+      setError(null);
+      console.log("✅ Location tracking started successfully");
+      return true;
+    } catch (err) {
+      console.error("❌ Location tracking error:", err);
+      setError(err.message);
+      setIsTracking(false);
+      return false;
+    }
+  }, [bookingId, isConnected, connect, sendLocation]);
+
+  // Stop location tracking
+  const stopTracking = useCallback(async () => {
+    console.log("🛑 Stopping location tracking...");
+
+    if (watchRef.current) {
+      await watchRef.current.remove();
+      watchRef.current = null;
+    }
+
+    setIsTracking(false);
+    setLocation(null);
+    setLastSentAt(null);
+    console.log("✅ Location tracking stopped");
+  }, []);
+
+  // Effect to start/stop tracking based on isActive
+  useEffect(() => {
+    isMountedRef.current = true;
+
+    if (isActive && bookingId) {
+      startTracking();
+    } else {
+      stopTracking();
+    }
+
+    // Cleanup on unmount
+    return () => {
+      isMountedRef.current = false;
+      if (watchRef.current) {
+        watchRef.current.remove();
+        watchRef.current = null;
+      }
     };
+  }, [isActive, bookingId, startTracking, stopTracking]);
 
-    return {
-        location,
-        error,
-        isTracking,
-        stopTracking,
-    };
+  return {
+    location,
+    error,
+    isTracking,
+    lastSentAt,
+    stopTracking,
+    startTracking,
+  };
 };
 
 export default useLocationTracking;

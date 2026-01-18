@@ -53,6 +53,7 @@ export default function CustomerBookingDetail() {
   const {
     location,
     isTracking,
+    lastSentAt,
     error: trackingError,
   } = useLocationTracking(booking?._id || booking?.id, isOngoing);
 
@@ -76,10 +77,14 @@ export default function CustomerBookingDetail() {
       // Check if this booking already has a review (only for completed bookings)
       if (bookingData?.status === "completed") {
         try {
-          const reviewsRes = await api.get(`/reviews/car/${bookingData.car?._id || bookingData.car}`);
+          const reviewsRes = await api.get(
+            `/reviews/car/${bookingData.car?._id || bookingData.car}`,
+          );
           const reviews = reviewsRes.data?.reviews || [];
           // Check if current user has already reviewed this specific booking
-          const existingReview = reviews.find(r => r.booking === id || r.booking?._id === id);
+          const existingReview = reviews.find(
+            (r) => r.booking === id || r.booking?._id === id,
+          );
           if (existingReview) {
             setHasReviewed(true);
           }
@@ -283,6 +288,44 @@ export default function CustomerBookingDetail() {
             </Text>
           </View>
         </View>
+
+        {/* Live Tracking Banner - Shows when location is being shared */}
+        {isOngoing && isTracking && (
+          <View style={styles.trackingBanner}>
+            <View style={styles.trackingDot} />
+            <Text style={styles.trackingText}>📍 Location Sharing Active</Text>
+            {location && (
+              <Text style={styles.trackingCoords}>
+                {location.latitude.toFixed(5)}, {location.longitude.toFixed(5)}
+              </Text>
+            )}
+            {lastSentAt && (
+              <Text
+                style={[styles.trackingCoords, { width: "100%", marginTop: 4 }]}
+              >
+                Last sent: {lastSentAt.toLocaleTimeString()}
+              </Text>
+            )}
+          </View>
+        )}
+
+        {/* Tracking Error Banner */}
+        {isOngoing && trackingError && (
+          <View
+            style={[
+              styles.trackingBanner,
+              {
+                backgroundColor: COLORS.red[500] + "15",
+                borderColor: COLORS.red[500] + "30",
+              },
+            ]}
+          >
+            <Ionicons name="warning" size={18} color={COLORS.red[500]} />
+            <Text style={[styles.trackingText, { color: COLORS.red[500] }]}>
+              Tracking Error: {trackingError}
+            </Text>
+          </View>
+        )}
 
         {/* Car Info Card */}
         <View style={styles.card}>
