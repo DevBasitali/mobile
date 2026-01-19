@@ -67,6 +67,15 @@ function BackgroundLocationTracker() {
   useEffect(() => {
     const manageBackgroundTracking = async () => {
       if (ongoingBookingId) {
+        // Fix: Don't try to start foreground service if app is in background
+        if (AppState.currentState !== "active") {
+          console.log(
+            "⏳ App in background, waiting for foreground to start tracking...",
+          );
+          setTrackingBookingId(ongoingBookingId);
+          return;
+        }
+
         console.log("🔒 Starting BACKGROUND tracking for maximum safety...");
         setTrackingBookingId(ongoingBookingId); // Set the booking ID for background task
         const started = await startBackgroundTracking(ongoingBookingId);
