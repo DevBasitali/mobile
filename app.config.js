@@ -4,9 +4,8 @@ export default ({ config }) => {
 
   return {
     ...config,
-    owner: "swiftride",
     name: "Swiftride",
-    slug: "swiftride",
+    slug: "swift-ride",
     version: "1.0.0",
     orientation: "portrait",
     icon: "./assets/images/icon.png",
@@ -102,7 +101,7 @@ export default ({ config }) => {
     extra: {
       ...config.extra,
       eas: {
-        projectId: "884cd66d-bc18-4d3c-97d9-39b053327f72",
+        projectId: "6f4f5114-d856-4723-884c-2b4ba0eaca24",
       },
     },
   };
